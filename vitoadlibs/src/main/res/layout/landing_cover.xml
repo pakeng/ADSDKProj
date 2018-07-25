@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ImageView
+        android:id="@+id/landing_page_bg"
+        android:scaleType="centerCrop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+    <FrameLayout
+        android:id="@+id/landing_page_space"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </FrameLayout>
+    <Button
+        android:id="@+id/download"
+        android:background="@android:color/transparent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!--<include layout="@layout/app_info_bar" />-->
+    <LinearLayout
+        android:gravity="bottom"
+        android:orientation="vertical"
+        android:background="@android:color/transparent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <RelativeLayout
+            android:background="#20000000"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/ad_appName"
+                android:text="@string/app_name"
+                android:textSize="20dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginLeft="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:background="#20000000"
+            android:paddingBottom="5dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/ad_appIcon"
+            android:background="@android:color/transparent"
+            android:layout_margin="5dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp" />
+            <LinearLayout
+                android:layout_toRightOf="@id/ad_appIcon"
+                android:layout_marginTop="5dp"
+                android:id="@+id/rating_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <RatingBar
+                    android:id="@+id/mRatingBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:isIndicator="true"
+                    android:layout_marginLeft="-5dp"
+                    android:scaleX="0.5"
+                    android:scaleY="0.5"
+                    android:numStars="5"
+                    android:rating="4.3"
+                    android:stepSize="0.5" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/small_download"
+                android:text="下载"
+                android:background="@drawable/btn_bg_corner"
+                android:textSize="20sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="20dp" />
+        </RelativeLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/close_ad"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="right"
+        android:layout_marginRight="21dp"
+        android:layout_marginTop="21dp"
+        android:background="@drawable/btn_close_bg_corner"
+        android:text="@string/close_ad" />
+</FrameLayout>

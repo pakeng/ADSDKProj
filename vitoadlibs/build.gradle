@@ -1,0 +1,35 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 27
+
+
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 21
+        versionCode 1
+        versionName "1.0"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    api fileTree(dir: 'libs', include: ['*.jar'])
+    api 'com.github.bumptech.glide:glide:4.7.1'
+    api 'com.squareup.okhttp3:okhttp:3.7.0'
+    //完整版引入
+//    api 'com.shuyu:GSYVideoPlayer:5.0.0-beta'
+    api 'com.android.support:appcompat-v7:27.1.1'
+    api 'com.github.pinguo-zhouwei:MZBannerView:v2.0.2'
+    api 'jp.wasabeef:glide-transformations:3.3.0'
+    api 'com.google.code.gson:gson:2.8.0'
+}

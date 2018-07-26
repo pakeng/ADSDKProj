@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.vito.ad.base.entity.ADServerResponse;
@@ -44,7 +45,7 @@ public class AdManager {
     public static Activity mContext;
     private String mADDeviceInfo;
     private IPrepareCompleteCallBack mPrepareCompleteCallback = null;
-    private int mAllReadyADCount;
+    private volatile int mAllReadyADCount;
     private int currentWhere; // 当前打开广告的地方，类似于透传
     private IShowCallBack showCallBack; // 播放回调
     private int currentShowAdTaskId;
@@ -55,6 +56,7 @@ public class AdManager {
     private String mChannel;
     private String subChannelStr;
 
+
     public static AdManager InitAdManager(Activity ctx){
         if (instance==null){
             synchronized (AdManager.class){
@@ -63,7 +65,6 @@ public class AdManager {
                     DownloadTaskManager.getInstance();
                     AdTaskManager.getInstance();
                     CallBackRequestUtil.Init(ctx);
-                    instance.prepareAdInfo();
                     // 注册 processer
                     OneWayProcessor oneWayProcesser = new OneWayProcessor();
                     LMProcessor lmProcesser = new LMProcessor();
@@ -112,7 +113,8 @@ public class AdManager {
     private AdManager(Activity ctx){
         mContext = ctx;
         InitAnalysisConfigData();
-        getPriorityInfo(null);
+        prepareAdInfo();
+
     }
 
     private String prepareAdInfo(){
@@ -122,7 +124,12 @@ public class AdManager {
     }
 
     public void PrepareAD(){
-        ThreadExecutor.getInstance().addTask(getPrepareTask());
+        if (getAllReadyADCount()>0&getOneAdId()!=-1){
+            if (mPrepareCompleteCallback!=null)
+                mPrepareCompleteCallback.onReadyPlay(mAllReadyADCount);
+            return;
+        }
+        getPriorityInfo(getPrepareTask());
     }
 
     private Runnable getPrepareTask(){
@@ -182,8 +189,9 @@ public class AdManager {
     }
 
     private int getAllReadyADCount() {
-        checkReadyAd();
-        return mAllReadyADCount;
+        // TODO  优化需求， 在没有改动广告数据的时候不要再次遍历直接返回之前遍历的数据。
+
+        return checkReadyAd();
     }
 
     public void AddAllReadyADCount() {
@@ -275,10 +283,6 @@ public class AdManager {
         }
 
         NetHelper.callWithNoResponse(Constants.getADSURL(), Constants.CLOSE_METHOD, params);
-        if (getAllReadyADCount()<=0){
-            getPriorityInfo(getPrepareTask());
-        }
-
     }
 
     public int getCurrentShowAdTaskId() {
@@ -286,7 +290,7 @@ public class AdManager {
     }
 
     // 检查可用的广告数量
-    private void checkReadyAd(){
+    private int checkReadyAd(){
         mAllReadyADCount = 0;
         for (ADTask task : AdTaskManager.getInstance().getReadOnlyAdTasks()) {
             if (!task.isRemove()){
@@ -295,6 +299,7 @@ public class AdManager {
                     mAllReadyADCount++;
             }
         }
+        return mAllReadyADCount;
     }
 
     private int getOneAdIdWithTable(List<Integer> priority_table) {
@@ -329,15 +334,18 @@ public class AdManager {
         return -1;
     }
 
+    @NonNull
     private void getPriorityInfo(final Runnable callbackTask){
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                JSONObject jsonObject = new JSONObject();
+                JSONObject jsonObject;
                 try {
+                    jsonObject = new JSONObject(mADDeviceInfo);
                     jsonObject.put("channel", subChannelStr);
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    jsonObject = new JSONObject();
                     Log.e("ADTEST", subChannelStr+ "make error");
                 }
                 String result = NetHelper.callWithResponse(Constants.getADSURL(), Constants.GET_AD_ORDER, jsonObject);
@@ -345,9 +353,7 @@ public class AdManager {
                 ADServerResponse response = gson.fromJson(result, ADServerResponse.class);
                 if (response!=null&&response.getRet()){
                     priority = response.getData();
-                    if (callbackTask!=null){
-                        ThreadExecutor.getInstance().addTask(callbackTask);
-                    }
+                    ThreadExecutor.getInstance().addTask(callbackTask);
                 }
                 Log.e("ADTEST", result);
             }

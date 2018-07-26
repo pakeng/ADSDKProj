@@ -142,6 +142,8 @@ public class AdTaskManager {
         if (adTask.isRemoveOnClose()){
             adTask.setRemove(true);
             upDateSaveFile();
+            // 刷新广告数量
+            AdManager.getInstance().PrepareAD();
         }
     }
 

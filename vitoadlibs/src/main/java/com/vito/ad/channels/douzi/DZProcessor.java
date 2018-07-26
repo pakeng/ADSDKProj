@@ -21,10 +21,8 @@ import com.vito.utils.network.NetHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 
 public class DZProcessor extends IProcessor {
     private DZAdContent dzAdContent = null;
@@ -155,13 +153,8 @@ public class DZProcessor extends IProcessor {
                 e.printStackTrace();
                 return result;
             }
-            String params = "{}";
-            try {
-                params = URLEncoder.encode(param.toString(), "utf-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            result = NetHelper.callWithResponse(Config.getADSURL(), Config.GET_AD_METHOD, params);
+
+            result = NetHelper.callWithResponse(Config.getADSURL(), Config.GET_AD_METHOD, param);
             //判断返回数据是否返回广告
             if (StringUtil.isNotEmpty(result)) {
                 Gson gson = new Gson();

@@ -127,9 +127,9 @@ public class DZProcessor extends IProcessor {
         if (StringUtil.isNotEmpty(paramsModel)) {
             JSONObject param = new JSONObject();
             try {
-                param.put("lmver","1");//api版本号
+                param.put("platform", 1); // 0 ios , 1 android
                 param.put("density",paramsModel.getDensity());//屏幕密度
-                param.put("ua",paramsModel.getUa());//取Webview的UA
+                param.put("ua",paramsModel.getUa());//取WebView的UA
                 param.put("appver", paramsModel.getAppVersion());//当前APP的版本号
                 param.put("ip", paramsModel.getIp());//IP
                 param.put("addr", paramsModel.getAddr()); //地址

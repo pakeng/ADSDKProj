@@ -112,7 +112,7 @@ public class AdManager {
     private AdManager(Activity ctx){
         mContext = ctx;
         InitAnalysisConfigData();
-        getChanelInfo();
+        getPriorityInfo(null);
     }
 
     private String prepareAdInfo(){
@@ -122,18 +122,26 @@ public class AdManager {
     }
 
     public void PrepareAD(){
+        ThreadExecutor.getInstance().addTask(getPrepareTask());
+    }
+
+    private Runnable getPrepareTask(){
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                if (!prepareADs())
+                if (!prepareADs()) {
                     Log.e("error prepareAD");
+                    if (mPrepareCompleteCallback!=null){
+                        mPrepareCompleteCallback.onFailed(-1, 0);
+                    }
+                }
             }
         };
-
-        ThreadExecutor.getInstance().addTask(task);
+        return task;
     }
 
     private boolean prepareADs(){
+        int count = 0;
         for (IProcessor processor : ProcesserManager.getInstance().getProcessers()){
             if (priority!=null&&priority.contains(processor.getType())){
                 processor.startProcessor();
@@ -141,9 +149,10 @@ public class AdManager {
                 ADTask adTask = processor.getADTask();
                 AdTaskManager.getInstance().pushTask(adTask);
                 DownloadTaskManager.getInstance().pushTask(task);
+                count++;
             }
         }
-        return true;
+        return count>0;
     }
 
     private String buildGetUrl(String url, String paramStr, int id){
@@ -266,6 +275,10 @@ public class AdManager {
         }
 
         NetHelper.callWithNoResponse(Constants.getADSURL(), Constants.CLOSE_METHOD, params);
+        if (getAllReadyADCount()<=0){
+            getPriorityInfo(getPrepareTask());
+        }
+
     }
 
     public int getCurrentShowAdTaskId() {
@@ -316,7 +329,7 @@ public class AdManager {
         return -1;
     }
 
-    private void getChanelInfo(){
+    private void getPriorityInfo(final Runnable callbackTask){
         Runnable task = new Runnable() {
             @Override
             public void run() {
@@ -332,6 +345,9 @@ public class AdManager {
                 ADServerResponse response = gson.fromJson(result, ADServerResponse.class);
                 if (response!=null&&response.getRet()){
                     priority = response.getData();
+                    if (callbackTask!=null){
+                        ThreadExecutor.getInstance().addTask(callbackTask);
+                    }
                 }
                 Log.e("ADTEST", result);
             }
@@ -353,26 +369,7 @@ public class AdManager {
             isDebug = isDebug||appInfo.metaData.getInt("dbclf") > 100;   // debug config level flag 当大于100的时候就是测试版本
         }else{
             subChannelStr = "error";
-//            isDebug = false;
         }
   }
-
-
-//  public void testDownloadAndInstall(){
-//      new Thread(new Runnable() {
-//          @Override
-//          public void run() {
-//              DownloadTask d = new DownloadTask();
-//              d.setType(Constants.APK_DOWNLOAD);
-//              d.setUrl("http://dl.lianwifi.com/download/android/WifiKey-3213-guanwang.apk");
-//              d.setAppName("mianfeiwifi.apk");
-//              d.setName("mianfeiwifi.apk");
-//              d.setId(555);
-//              d.setOriginId(1);
-//              DownloadTaskManager.getInstance().pushTask(d);
-//          }
-//      }).start();
-//  }
-
 
 }

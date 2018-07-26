@@ -15,7 +15,9 @@ import com.vito.ad.managers.AdManager;
 import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
-
+    private Button showBtn;
+    private Button preBtn;
+    private TextView tv;
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("native-lib");
@@ -29,11 +31,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Example of a call to a native method
-        final TextView tv = (TextView) findViewById(R.id.sample_text);
+        tv = (TextView) findViewById(R.id.sample_text);
         tv.setText(stringFromJNI());
-        Button preBtn = findViewById(R.id.prepare_ad);
-        final Button showBtn = findViewById(R.id.show_ad);
-
+        preBtn = findViewById(R.id.prepare_ad);
+        showBtn = findViewById(R.id.show_ad);
+        initAD();
         mHandler = new Handler(Looper.getMainLooper());
         preBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -41,47 +43,8 @@ public class MainActivity extends AppCompatActivity {
                 mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        adManager = AdManager.InitAdManager(MainActivity.this);
-                        adManager.setPrepareListener(new IPrepareCompleteCallBack() {
-                            @Override
-                            public void onSuccess(final int Adid, final int allReadyAd) {
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            showBtn.setEnabled(true);
-                                            Log.e("ADTEST", "ready_id = "+ Adid+" allReadyAd = "+ allReadyAd);
-                                            tv.setText("准备好了"+allReadyAd+"个广告，刚刚下载的id是"+Adid);
-                                        }
-                                    });
 
-                            }
 
-                            @Override
-                            public void onFailed(final int Adid, final int allReadyAd) {
-                                Log.e("ADTEST", "failed_id = "+ Adid+" allReadyAd = "+ allReadyAd);
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (allReadyAd>0)
-                                            showBtn.setEnabled(true);
-                                        tv.setText("准备好了"+allReadyAd+"个广告，刚刚下载失败的id是"+Adid);
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onReadyPlay(final int count) {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        tv.setText("准备好了"+count+"个广告");
-                                        showBtn.setEnabled(true);
-                                    }
-                                });
-                            }
-                        });
-                        com.vito.utils.Log.debugLevel = 2;
-                        com.vito.utils.Log.isDebug = true;
 
                         adManager.PrepareAD();
 //                        adManager.testDownloadAndInstall();
@@ -98,6 +61,50 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void initAD() {
+        com.vito.utils.Log.debugLevel = 2;
+        com.vito.utils.Log.isDebug = true;
+        adManager = AdManager.InitAdManager(MainActivity.this);
+        adManager.setPrepareListener(new IPrepareCompleteCallBack() {
+            @Override
+            public void onSuccess(final int Adid, final int allReadyAd) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showBtn.setEnabled(true);
+                        Log.e("ADTEST", "ready_id = "+ Adid+" allReadyAd = "+ allReadyAd);
+                        tv.setText("准备好了"+allReadyAd+"个广告，刚刚下载的id是"+Adid);
+                    }
+                });
+
+            }
+
+            @Override
+            public void onFailed(final int Adid, final int allReadyAd) {
+                Log.e("ADTEST", "failed_id = "+ Adid+" allReadyAd = "+ allReadyAd);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (allReadyAd>0)
+                            showBtn.setEnabled(true);
+                        tv.setText("准备好了"+allReadyAd+"个广告，刚刚下载失败的id是"+Adid);
+                    }
+                });
+            }
+
+            @Override
+            public void onReadyPlay(final int count) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        tv.setText("准备好了"+count+"个广告");
+                        showBtn.setEnabled(true);
+                    }
+                });
+            }
+        });
     }
 
     /**

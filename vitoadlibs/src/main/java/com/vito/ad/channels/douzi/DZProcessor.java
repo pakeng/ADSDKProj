@@ -21,10 +21,8 @@ import com.vito.utils.network.NetHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 
 public class DZProcessor extends IProcessor {
     private DZAdContent dzAdContent = null;
@@ -127,9 +125,9 @@ public class DZProcessor extends IProcessor {
         if (StringUtil.isNotEmpty(paramsModel)) {
             JSONObject param = new JSONObject();
             try {
-                param.put("lmver","1");//api版本号
+                param.put("platform", 1); // 0 ios , 1 android
                 param.put("density",paramsModel.getDensity());//屏幕密度
-                param.put("ua",paramsModel.getUa());//取Webview的UA
+                param.put("ua",paramsModel.getUa());//取WebView的UA
                 param.put("appver", paramsModel.getAppVersion());//当前APP的版本号
                 param.put("ip", paramsModel.getIp());//IP
                 param.put("addr", paramsModel.getAddr()); //地址
@@ -155,13 +153,8 @@ public class DZProcessor extends IProcessor {
                 e.printStackTrace();
                 return result;
             }
-            String params = "{}";
-            try {
-                params = URLEncoder.encode(param.toString(), "utf-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            result = NetHelper.callWithResponse(Config.getADSURL(), Config.GET_AD_METHOD, params);
+
+            result = NetHelper.callWithResponse(Config.getADSURL(), Config.GET_AD_METHOD, param);
             //判断返回数据是否返回广告
             if (StringUtil.isNotEmpty(result)) {
                 Gson gson = new Gson();

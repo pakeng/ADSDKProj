@@ -416,7 +416,6 @@ public class DeviceInfo {
                     .put("appName", "点点消宝藏")
                     .put("so", 1) // screen_orientation  // 横竖屏  1 竖屏 2 横屏
                     .put("ip",getLocalIpAddress())
-//                    .put("sortnum", 0)
                     .put("appVersion", getVersionName())  // 游戏版本号 1.0.0
                     .put("mac", getDeviceInfoMac())  // mac 地址
                     .put("ua", getUA())

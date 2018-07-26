@@ -8,6 +8,8 @@ import com.vito.utils.ThreadExecutor;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -246,7 +248,7 @@ public class NetHelper {
         String token = MD5Util.encrypt(method+"wx2017"+timestamp);
         sb.append(method)
                 .append("&param=")
-                .append(params.toString())
+                .append(encode(params.toString()))
                 .append("&token=")
                 .append(token)
                 .append("&timestamp=")
@@ -255,13 +257,14 @@ public class NetHelper {
         NetHelper.sendGetRequest(sb.toString());
     }
 
-    public static String callWithResponse(String url, String method,JSONObject params){
+    public static String callWithResponse(String url, String method,JSONObject jsonObject){
+
         StringBuilder sb = new StringBuilder(url);
         String timestamp=  System.currentTimeMillis()/1000+"";
         String token = MD5Util.encrypt(method+"wx2017"+timestamp);
         sb.append(method)
                 .append("&param=")
-                .append(params.toString())
+                .append(encode(jsonObject.toString()))
                 .append("&token=")
                 .append(token)
                 .append("&timestamp=")
@@ -271,18 +274,29 @@ public class NetHelper {
     }
 
 
-    public static String callWithResponse(String url, String method,String params){
+    public static String callWithResponse(String url, String method,String paramstr){
+
         StringBuilder sb = new StringBuilder(url);
         String timestamp=  System.currentTimeMillis()/1000+"";
         String token = MD5Util.encrypt(method+"wx2017"+timestamp);
         sb.append(method)
                 .append("&param=")
-                .append(params.toString())
+                .append(encode(paramstr))
                 .append("&token=")
                 .append(token)
                 .append("&timestamp=")
                 .append(timestamp);
         Log.e("ADTEST", sb.toString());
         return NetHelper.doGetHttpResponse(sb.toString(), 1);
+    }
+
+    private static String encode(String paramstr){
+        String params = "{}";
+        try {
+            params = URLEncoder.encode(paramstr, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return  params;
     }
 }

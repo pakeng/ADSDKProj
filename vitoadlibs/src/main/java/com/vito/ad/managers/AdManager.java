@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.vito.ad.base.entity.ADServerResponse;
@@ -44,7 +45,7 @@ public class AdManager {
     public static Activity mContext;
     private String mADDeviceInfo;
     private IPrepareCompleteCallBack mPrepareCompleteCallback = null;
-    private int mAllReadyADCount;
+    private volatile int mAllReadyADCount;
     private int currentWhere; // 当前打开广告的地方，类似于透传
     private IShowCallBack showCallBack; // 播放回调
     private int currentShowAdTaskId;
@@ -55,6 +56,7 @@ public class AdManager {
     private String mChannel;
     private String subChannelStr;
 
+
     public static AdManager InitAdManager(Activity ctx){
         if (instance==null){
             synchronized (AdManager.class){
@@ -63,7 +65,6 @@ public class AdManager {
                     DownloadTaskManager.getInstance();
                     AdTaskManager.getInstance();
                     CallBackRequestUtil.Init(ctx);
-                    instance.prepareAdInfo();
                     // 注册 processer
                     OneWayProcessor oneWayProcesser = new OneWayProcessor();
                     LMProcessor lmProcesser = new LMProcessor();
@@ -112,7 +113,8 @@ public class AdManager {
     private AdManager(Activity ctx){
         mContext = ctx;
         InitAnalysisConfigData();
-        getChanelInfo();
+        prepareAdInfo();
+
     }
 
     private String prepareAdInfo(){
@@ -122,18 +124,31 @@ public class AdManager {
     }
 
     public void PrepareAD(){
+        if (getAllReadyADCount()>0&getOneAdId()!=-1){
+            if (mPrepareCompleteCallback!=null)
+                mPrepareCompleteCallback.onReadyPlay(mAllReadyADCount);
+            return;
+        }
+        getPriorityInfo(getPrepareTask());
+    }
+
+    private Runnable getPrepareTask(){
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                if (!prepareADs())
+                if (!prepareADs()) {
                     Log.e("error prepareAD");
+                    if (mPrepareCompleteCallback!=null){
+                        mPrepareCompleteCallback.onFailed(-1, 0);
+                    }
+                }
             }
         };
-
-        ThreadExecutor.getInstance().addTask(task);
+        return task;
     }
 
     private boolean prepareADs(){
+        int count = 0;
         for (IProcessor processor : ProcesserManager.getInstance().getProcessers()){
             if (priority!=null&&priority.contains(processor.getType())){
                 processor.startProcessor();
@@ -141,9 +156,10 @@ public class AdManager {
                 ADTask adTask = processor.getADTask();
                 AdTaskManager.getInstance().pushTask(adTask);
                 DownloadTaskManager.getInstance().pushTask(task);
+                count++;
             }
         }
-        return true;
+        return count>0;
     }
 
     private String buildGetUrl(String url, String paramStr, int id){
@@ -173,8 +189,9 @@ public class AdManager {
     }
 
     private int getAllReadyADCount() {
-        checkReadyAd();
-        return mAllReadyADCount;
+        // TODO  优化需求， 在没有改动广告数据的时候不要再次遍历直接返回之前遍历的数据。
+
+        return checkReadyAd();
     }
 
     public void AddAllReadyADCount() {
@@ -273,7 +290,7 @@ public class AdManager {
     }
 
     // 检查可用的广告数量
-    private void checkReadyAd(){
+    private int checkReadyAd(){
         mAllReadyADCount = 0;
         for (ADTask task : AdTaskManager.getInstance().getReadOnlyAdTasks()) {
             if (!task.isRemove()){
@@ -282,6 +299,7 @@ public class AdManager {
                     mAllReadyADCount++;
             }
         }
+        return mAllReadyADCount;
     }
 
     private int getOneAdIdWithTable(List<Integer> priority_table) {
@@ -316,15 +334,18 @@ public class AdManager {
         return -1;
     }
 
-    private void getChanelInfo(){
+    @NonNull
+    private void getPriorityInfo(final Runnable callbackTask){
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                JSONObject jsonObject = new JSONObject();
+                JSONObject jsonObject;
                 try {
+                    jsonObject = new JSONObject(mADDeviceInfo);
                     jsonObject.put("channel", subChannelStr);
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    jsonObject = new JSONObject();
                     Log.e("ADTEST", subChannelStr+ "make error");
                 }
                 String result = NetHelper.callWithResponse(Constants.getADSURL(), Constants.GET_AD_ORDER, jsonObject);
@@ -332,6 +353,7 @@ public class AdManager {
                 ADServerResponse response = gson.fromJson(result, ADServerResponse.class);
                 if (response!=null&&response.getRet()){
                     priority = response.getData();
+                    ThreadExecutor.getInstance().addTask(callbackTask);
                 }
                 Log.e("ADTEST", result);
             }
@@ -353,26 +375,7 @@ public class AdManager {
             isDebug = isDebug||appInfo.metaData.getInt("dbclf") > 100;   // debug config level flag 当大于100的时候就是测试版本
         }else{
             subChannelStr = "error";
-//            isDebug = false;
         }
   }
-
-
-//  public void testDownloadAndInstall(){
-//      new Thread(new Runnable() {
-//          @Override
-//          public void run() {
-//              DownloadTask d = new DownloadTask();
-//              d.setType(Constants.APK_DOWNLOAD);
-//              d.setUrl("http://dl.lianwifi.com/download/android/WifiKey-3213-guanwang.apk");
-//              d.setAppName("mianfeiwifi.apk");
-//              d.setName("mianfeiwifi.apk");
-//              d.setId(555);
-//              d.setOriginId(1);
-//              DownloadTaskManager.getInstance().pushTask(d);
-//          }
-//      }).start();
-//  }
-
 
 }

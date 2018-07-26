@@ -15,7 +15,7 @@
     <application>
 
         <activity android:name="com.vito.ad.views.activitys.PlayerActivity"
-            android:screenOrientation="landscape"
+            android:screenOrientation="sensorPortrait"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:launchMode="singleTask"
             android:theme="@style/Theme.AppCompat.NoActionBar"/>

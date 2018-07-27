@@ -13,3 +13,4 @@
 *.prefs
 *.project
 *.classpath
+bintrayUserInfo.properties

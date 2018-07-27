@@ -36,11 +36,11 @@ dependencies {
 
 ext {
     // 项目的主页
-    yourSiteUrl = 'https://github.com/chendongMarch/LightAdapterExample'
+    yourSiteUrl = 'https://github.com/pakeng/ADSDKProj'
     // Git仓库的url
-    yourGitUrl = 'https://github.com/chendongMarch/LightAdapterExample'
+    yourGitUrl = 'https://github.com/pakeng/ADSDKProj.git'
     // issue 地址
-    YourIssueTrackerUrl = 'https://github.com/chendongMarch/LightAdapterExample/issues'
+    YourIssueTrackerUrl = 'https://github.com/pakeng/ADSDKProj/issues'
 
     // 项目的名称，将会显示在bintray
     yourProName = 'ADSDK'
@@ -53,11 +53,9 @@ ext {
     yourName = 'VitoADSDK'
     // email
     yourEmail = '625125312@qq.com'
-
     // 最后生成依赖 compile 'yourGroup:yourArtifactId:yourVersion'
-    // 最后生成依赖 compile 'com.march.lightadapter:lightadapter:1.0.1-beta1'
     yourGroup = 'com.pinode.vito.adsdk'
-    yourArtifactId = 'adsdk'
+    yourArtifactId = 'ADSDK'
     yourVersion = '1.0.0-release'
 
 
@@ -66,7 +64,7 @@ ext {
     // bintray.user=xxxx
     // bintray.apikey=xxxx
     // 你可以使用项目中的 local.properties
-    yourBintrayUserPath = 'local.properties'
+    yourBintrayUserPath = 'bintrayUserInfo.properties'
 }
 
 apply from: 'upload_bintray.gradle'

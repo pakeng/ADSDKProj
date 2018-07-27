@@ -10,3 +10,6 @@
 /captures
 .externalNativeBuild
 /vitoadlibs/build
+*.prefs
+*.project
+*.classpath

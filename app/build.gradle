@@ -3,9 +3,9 @@ apply plugin: 'com.android.application'
 android {
     signingConfigs {
         release_config {
-            keyAlias 'ddx.keystore'
+            keyAlias 'debug'
             keyPassword '123456'
-            storeFile file('D:/SeaProject/apk/ddx.keystore')
+            storeFile file('C:/Users/Vito_d/Documents/WorkSpace/keystore/debug.jks')
             storePassword '123456'
         }
     }

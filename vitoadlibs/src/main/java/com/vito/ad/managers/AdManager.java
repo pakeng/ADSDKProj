@@ -69,8 +69,8 @@ public class AdManager {
                     OneWayProcessor oneWayProcesser = new OneWayProcessor();
                     LMProcessor lmProcesser = new LMProcessor();
                     DZProcessor dzProcesser = new DZProcessor();
-                    ProcesserManager.getInstance().registerProcesser(oneWayProcesser.getType(),oneWayProcesser );
-                    ProcesserManager.getInstance().registerProcesser(dzProcesser.getType(),dzProcesser );
+                    ProcesserManager.getInstance().registerProcesser(oneWayProcesser.getType(), oneWayProcesser );
+                    ProcesserManager.getInstance().registerProcesser(dzProcesser.getType(), dzProcesser );
                     ProcesserManager.getInstance().registerProcesser(lmProcesser.getType(), lmProcesser);
                 }
             }
@@ -255,8 +255,8 @@ public class AdManager {
         this.showCallBack = showCallBack;
     }
 
-    public void onADClose() {
-        if (showCallBack!=null){
+    public void onADClose(boolean status) {
+        if (showCallBack!=null&&status){
             showCallBack.onClose(currentWhere);
         }
         // 发送 完成广告的回调给游戏服务器
@@ -265,7 +265,7 @@ public class AdManager {
         try {
             params.put("uid", mUid);
             params.put("token", showToken);
-            params.put("status", 1);
+            params.put("status", status?1:0);  // TODO
             params.put("channel", mChannel);
             params.put("device", mDeviceID);
             params.put("is_down", downloadTask.isApkDownload()?1:0);

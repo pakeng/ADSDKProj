@@ -7,6 +7,7 @@ import android.view.View;
 import com.vito.ad.base.interfaces.IUrlBuildInterface;
 import com.vito.ad.base.task.ADTask;
 import com.vito.ad.views.ILandView;
+import com.vito.utils.Log;
 
 import java.util.HashMap;
 
@@ -36,8 +37,13 @@ public class ViewManager {
 
     // 创建 落地页
     public View buildLandingPageView(Context context, ADTask task){
-        if (task==null||this.landViewHashMap.get(task.getType()) == null)
+        if (task == null)
+            Log.e("buildLandingPageView with null task");
+        if (task==null||this.landViewHashMap.get(task.getType()) == null){
+            Log.e("buildLandingPageView with null landViewHashMap get type");
             return null;
+        }
+
         return this.landViewHashMap.get(task.getType()).getView(context, task);
 
 //

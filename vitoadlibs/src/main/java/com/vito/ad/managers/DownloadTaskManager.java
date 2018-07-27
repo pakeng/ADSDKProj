@@ -181,4 +181,14 @@ public class DownloadTaskManager {
         downloadTask.setName(name);
         return downloadTask;
     }
+
+    public void removeTaskByADId(int id) {
+        for (DownloadTask task : DownloadingTasks) {
+            if (task.getDownloadId() == id){
+                DownloadingTasks.remove(task);
+                upDateSaveFile();
+                return;
+            }
+        }
+    }
 }

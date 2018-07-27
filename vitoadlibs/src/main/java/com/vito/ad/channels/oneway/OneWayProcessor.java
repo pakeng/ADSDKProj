@@ -2,22 +2,21 @@ package com.vito.ad.channels.oneway;
 
 import android.util.Base64;
 
-import com.vito.ad.base.processor.IProcessor;
-import com.vito.utils.Log;
-
 import com.google.gson.Gson;
 import com.vito.ad.base.entity.VideoDetail;
 import com.vito.ad.base.interfaces.IAdBaseInterface;
+import com.vito.ad.base.processor.IProcessor;
 import com.vito.ad.base.task.ADTask;
 import com.vito.ad.base.task.DownloadTask;
 import com.vito.ad.channels.oneway.view.ImplLandView2;
 import com.vito.ad.managers.AdManager;
 import com.vito.ad.managers.AdTaskManager;
 import com.vito.ad.managers.ViewManager;
-import com.vito.utils.network.NetHelper;
-import com.vito.utils.DeviceInfo;
-import com.vito.utils.StringUtil;
 import com.vito.ad.views.video.interfaces.IVideoPlayListener;
+import com.vito.utils.DeviceInfo;
+import com.vito.utils.Log;
+import com.vito.utils.StringUtil;
+import com.vito.utils.network.NetHelper;
 
 import org.json.JSONObject;
 
@@ -33,7 +32,7 @@ public class OneWayProcessor extends IProcessor {
     private ADTask adTask;
     private DownloadTask downloadTask;
     private String sessionId;
-    private static IVideoPlayListener videoPlayerListener = new IVideoPlayListener() {
+    private IVideoPlayListener videoPlayerListener = new IVideoPlayListener() {
         @Override
         public void onStart() {
             JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("start");
@@ -74,7 +73,7 @@ public class OneWayProcessor extends IProcessor {
         }
     };
 
-    private static IAdBaseInterface iAdBaseInterface = new IAdBaseInterface() {
+    private IAdBaseInterface iAdBaseInterface = new IAdBaseInterface() {
         @Override
         public void onShow() {
             JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("show");
@@ -168,12 +167,19 @@ public class OneWayProcessor extends IProcessor {
         downloadTask.setAppName(oneWayAdContent.getAppName());
         downloadTask.setmAdname(oneWayAdContent.getAppName());
         downloadTask.setVideoDetail(new VideoDetail(adTask.getId(), oneWayAdContent.getVideoDuration()));
+
+
+    }
+
+    public OneWayProcessor(){
         // 注册对应的回调方法
+        android.util.Log.e("ADSDK", "onewayProcessor  注册");
         AdTaskManager.getInstance().registerIVideoPlayListener(Config.ADTYPE, videoPlayerListener);
         AdTaskManager.getInstance().registerIAdBaseInterface(Config.ADTYPE, iAdBaseInterface);
         ViewManager.getInstance().registerLandPageView(Config.ADTYPE, new ImplLandView2());
-
     }
+
+
 
     @Override
     protected String buildLandingPage(String clickUrl) {

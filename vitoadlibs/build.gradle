@@ -33,3 +33,40 @@ dependencies {
     api 'jp.wasabeef:glide-transformations:3.3.0'
     api 'com.google.code.gson:gson:2.8.0'
 }
+
+ext {
+    // 项目的主页
+    yourSiteUrl = 'https://github.com/chendongMarch/LightAdapterExample'
+    // Git仓库的url
+    yourGitUrl = 'https://github.com/chendongMarch/LightAdapterExample'
+    // issue 地址
+    YourIssueTrackerUrl = 'https://github.com/chendongMarch/LightAdapterExample/issues'
+
+    // 项目的名称，将会显示在bintray
+    yourProName = 'ADSDK'
+    // 项目的描述
+    yourProDesc = '广告SDK'
+
+    // bintrayID
+    yourId = 'vitopeng'
+    // nickName
+    yourName = 'VitoADSDK'
+    // email
+    yourEmail = '625125312@qq.com'
+
+    // 最后生成依赖 compile 'yourGroup:yourArtifactId:yourVersion'
+    // 最后生成依赖 compile 'com.march.lightadapter:lightadapter:1.0.1-beta1'
+    yourGroup = 'com.pinode.vito.adsdk'
+    yourArtifactId = 'adsdk'
+    yourVersion = '1.0.0-release'
+
+
+    // 此文件中存储的是 bintray 的敏感信息，用户名和key
+    // 你需要在该文件中如下声明
+    // bintray.user=xxxx
+    // bintray.apikey=xxxx
+    // 你可以使用项目中的 local.properties
+    yourBintrayUserPath = 'local.properties'
+}
+
+apply from: 'upload_bintray.gradle'

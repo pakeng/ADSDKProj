@@ -1,0 +1,102 @@
+
+group = yourGroup
+version = yourVersion
+
+project.archivesBaseName = 'adsdk'
+
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.github.dcendents.android-maven'
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+//task javadoc(type: Javadoc) {
+//    source = android.sourceSets.main.java.srcDirs
+//    classpath += configurations.compile
+//    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+//}
+//
+//task javadocJar(type: Jar, dependsOn: javadoc) {
+//    classifier = 'javadoc'
+//    from javadoc.destinationDir
+//}
+//
+//javadoc {
+//    options{
+//        encoding "UTF-8"
+//        charSet 'UTF-8'
+//        author true
+//        version true
+//        links "https://pnode.cn"
+//        title yourProDesc
+//    }
+//}
+
+artifacts {
+    archives sourcesJar
+//    archives javadocJar
+}
+
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            name yourName
+            description yourProDesc
+            url yourSiteUrl
+            inceptionYear '2018'
+
+            packaging 'aar'
+            groupId yourGroup
+            artifactId yourArtifactId
+            version yourVersion
+
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }
+            scm {
+                connection yourGitUrl
+                url yourSiteUrl
+
+            }
+        }
+    }
+}
+
+bintray {
+
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file(yourBintrayUserPath).newDataInputStream())
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+
+    configurations = ['archives']
+
+    dryRun = false
+    publish = true
+
+    pkg {
+        //userOrg = PROJ_USER_ORG //这个是你创建时的organization,必须要有，不然没办法找到指定路径
+        repo = yourName
+        name = yourArtifactId
+        licenses = ['Apache-2.0']
+        vcsUrl = yourGitUrl
+        websiteUrl = yourSiteUrl
+        issueTrackerUrl = YourIssueTrackerUrl
+        publicDownloadNumbers = true
+        version {
+            name = yourVersion
+            desc = yourProDesc
+            vcsTag = yourVersion
+
+            gpg {
+                sign = true
+            }
+        }
+    }
+}

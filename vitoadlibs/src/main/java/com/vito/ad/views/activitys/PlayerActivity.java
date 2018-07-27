@@ -18,6 +18,7 @@ import com.vito.ad.managers.DownloadTaskManager;
 import com.vito.ad.managers.ViewManager;
 import com.vito.ad.views.video.MyVideo;
 import com.vito.ad.views.video.interfaces.IVideoplayInfo;
+import com.vito.utils.Log;
 
 import vito.com.vitoadlibs.R;
 
@@ -45,11 +46,25 @@ public class PlayerActivity extends AppCompatActivity {
 
     private void prepareData() {
         playADid = AdManager.getInstance().getOneAdId();
+        if (playADid == -1){
+            Log.e("get playADid == -1");
+            AdTaskManager.getInstance().onClose(adTask);
+        }
         downLoadTask = DownloadTaskManager.getInstance().getDownloadTaskByADId(playADid);
+        if (downLoadTask == null){
+            DownloadTaskManager.getInstance().removeTaskByADId(playADid);
+            Log.e("download task = null");
+            prepareData();
+        }
         if (downLoadTask!=null&&downLoadTask.getVideoDetail()!=null)
             downLoadTask.getVideoDetail().playTime++;
         adTask = AdTaskManager.getInstance().getAdTaskByADID(playADid);
-        if (adTask!=null&&downLoadTask.getVideoDetail()!=null&&downLoadTask.getVideoDetail().playTime>=1) // 播放3次之后就设置本次播放完之后移除这个广告
+        if (adTask == null) {
+            Log.e("ad task = null");
+            DownloadTaskManager.getInstance().removeTaskByADId(playADid);
+            prepareData();
+        }
+        if (downLoadTask.getVideoDetail()!=null&&downLoadTask.getVideoDetail().playTime>=1) // 播放3次之后就设置本次播放完之后移除这个广告
             adTask.setRemoveOnClose(true);
     }
 
@@ -90,6 +105,7 @@ public class PlayerActivity extends AppCompatActivity {
         if (landingView!=null)
             landing_parentLayout.addView(landingView, layoutParams);
         else {
+            Log.e("LandView == null");
             AdTaskManager.getInstance().onClose(adTask);
         }
         landing_parentLayout.setVisibility(View.GONE);

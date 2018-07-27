@@ -134,8 +134,13 @@ public class AdTaskManager {
             targetAdActivity.finish();
             targetAdActivity = null;
         }
-        AdManager.getInstance().onADClose();
-        removeTask(adTask);
+        if (adTask!=null){
+            AdManager.getInstance().onADClose(true); // 不为空就返回下发道具
+            removeTask(adTask);
+        }else {
+            AdManager.getInstance().onADClose(false);
+        }
+
     }
 
     private void removeTask(ADTask adTask) {

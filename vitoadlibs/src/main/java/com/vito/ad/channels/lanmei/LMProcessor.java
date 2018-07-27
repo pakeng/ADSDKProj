@@ -2,7 +2,6 @@ package com.vito.ad.channels.lanmei;
 
 import android.graphics.Point;
 import android.util.Base64;
-import com.vito.utils.Log;
 
 import com.google.gson.Gson;
 import com.vito.ad.base.entity.VideoDetail;
@@ -18,6 +17,7 @@ import com.vito.ad.managers.AdTaskManager;
 import com.vito.ad.managers.DownloadTaskManager;
 import com.vito.ad.managers.ViewManager;
 import com.vito.ad.views.video.interfaces.IVideoPlayListener;
+import com.vito.utils.Log;
 import com.vito.utils.MD5Util;
 import com.vito.utils.StringUtil;
 import com.vito.utils.network.NetHelper;
@@ -168,12 +168,17 @@ public class LMProcessor extends IProcessor {
         AdTaskManager.getInstance().pushTask(adTask);
         DownloadTaskManager.getInstance().pushTask(downloadTask);
 
+    }
+
+
+    public LMProcessor(){
+        android.util.Log.e("ADSDK", "LMProcessor 注册");
         // 注册对应的回调方法
         AdTaskManager.getInstance().registerIVideoPlayListener(Config.ADTYPE, videoPlayerListener);
         ViewManager.getInstance().registerLandPageView(Config.ADTYPE, new LMLandView());
         ViewManager.getInstance().registerUrlBuildInterface(Config.ADTYPE, iUrlBuildInterface);
-
     }
+
 
     @Override
     public String buildRequestInfo() {

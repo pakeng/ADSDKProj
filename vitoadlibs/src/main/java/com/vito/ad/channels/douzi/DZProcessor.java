@@ -113,11 +113,18 @@ public class DZProcessor extends IProcessor {
         AdTaskManager.getInstance().pushTask(adTask);
         DownloadTaskManager.getInstance().pushTask(downloadTask);
 
+
+
+    }
+
+    public DZProcessor(){
+        android.util.Log.e("ADSDK", "DZProcessor  注册");
         // 注册对应的回调方法
         AdTaskManager.getInstance().registerIVideoPlayListener(Config.ADTYPE, videoPlayerListener);
         ViewManager.getInstance().registerLandPageView(Config.ADTYPE, new DZLandView());
-
     }
+
+
 
     @Override
     public String buildRequestInfo() {

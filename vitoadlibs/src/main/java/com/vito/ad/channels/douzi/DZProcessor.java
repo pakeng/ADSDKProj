@@ -171,8 +171,11 @@ public class DZProcessor extends IProcessor {
                     Log.e("ADTEST", "get DZ ad failed with result = "+result);
                     return result;
                 }
-
-                dzAdContent = response.getAd().get(0);  // 只获取一个广告
+                if (response.getAd().size()>0)
+                    dzAdContent = response.getAd().get(0);  // 只获取一个广告
+                else {
+                    return result;
+                }
             }
         }
         return result;

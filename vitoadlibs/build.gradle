@@ -55,8 +55,8 @@ ext {
     yourEmail = '625125312@qq.com'
     // 最后生成依赖 compile 'yourGroup:yourArtifactId:yourVersion'
     yourGroup = 'com.pinode.vito.adsdk'
-    yourArtifactId = 'ADSDK'
-    yourVersion = '1.0.0-release'
+    yourArtifactId = 'adsdk'
+    yourVersion = '1.0.2-release'
 
 
     // 此文件中存储的是 bintray 的敏感信息，用户名和key

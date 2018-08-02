@@ -11,9 +11,9 @@ import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.net.Uri;
 import android.os.Build;
-import android.support.v4.content.FileProvider;
 import android.util.DisplayMetrics;
 
+import com.vito.ADFileProvider;
 import com.vito.ad.base.task.DownloadTask;
 import com.vito.ad.managers.ReceiverManager;
 
@@ -387,7 +387,7 @@ public class APPUtil {
 
     private static void installWithFileProvider(Context context,File file) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        Uri apkUri = FileProvider.getUriForFile(context, context.getPackageName()+".FileProvider", file);
+        Uri apkUri = ADFileProvider.getUriForFile(context, context.getPackageName()+".FileProvider", file);
         Log.e("uri == "+apkUri.toString());
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);

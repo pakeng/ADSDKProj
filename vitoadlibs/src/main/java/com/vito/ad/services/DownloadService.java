@@ -14,8 +14,8 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import com.vito.utils.Log;
 
+import com.vito.ad.base.interfaces.IAdBaseInterface;
 import com.vito.ad.base.jdktool.ConcurrentHashSet;
 import com.vito.ad.base.task.ADTask;
 import com.vito.ad.base.task.DownloadTask;
@@ -24,8 +24,8 @@ import com.vito.ad.managers.AdManager;
 import com.vito.ad.managers.AdTaskManager;
 import com.vito.ad.managers.DownloadTaskManager;
 import com.vito.utils.APPUtil;
+import com.vito.utils.Log;
 import com.vito.utils.file.FileUtil;
-import com.vito.utils.network.NetHelper;
 
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
@@ -254,10 +254,9 @@ public class DownloadService extends Service {
             if (task.getType() == Constants.ADVIDEO){
                 downloadVideo(task);
             }else {
-                if (AdTaskManager.getInstance().getAdTaskByADID(task.getOriginId())!=null)
-                    for (String url : AdTaskManager.getInstance().getAdTaskByADID(task.getOriginId()).getmDownloadStartCallBackUrls()) {
-                        NetHelper.sendGetRequest(url);
-                    }
+                ADTask adTask = AdTaskManager.getInstance().getAdTaskByADID(task.getOriginId());
+                if (adTask!=null)
+                    AdTaskManager.getInstance().getIAdBaseInterface(adTask).onDownLoadStart();
                 downloadApk(task);
             }
         }
@@ -271,17 +270,14 @@ public class DownloadService extends Service {
         task.setDownloadCompleted(true);
         if (task.getType()==Constants.APK_DOWNLOAD){
             ADTask adTask = AdTaskManager.getInstance().getAdTaskByADID(task.getOriginId());
-            if (adTask!=null){
-                for (String url : adTask.getmDownloadEndCallBackUrls()) {
-                    NetHelper.sendGetRequest(url);
-                }
-                for (String url : adTask.getmStartInstallCallBackUrls()){
-                    NetHelper.sendGetRequest(url);
-                }
-            }
+            if (adTask==null)
+                return;
+            IAdBaseInterface callback = AdTaskManager.getInstance().getIAdBaseInterface(adTask);
+            callback.onDownloadEnd();
+            callback.onInstallStart();
             APPUtil.installApkWithTask(AdManager.mContext, task);
         }else{
-            AdManager.getInstance().AddAllReadyADCount();
+            AdManager.getInstance().refreshAllReadyADCount();
             AdManager.getInstance().notifyPrepare(true, task.getId());
         }
     }

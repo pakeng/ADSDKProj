@@ -194,7 +194,7 @@ public class AdManager {
         return checkReadyAd();
     }
 
-    public void AddAllReadyADCount() {
+    public void refreshAllReadyADCount() {
         checkReadyAd();
         SharedPreferencesUtil.putIntValue(AdManager.mContext, Constants.AD_CONFIG_FILE_NAME, "allreadyadcount",mAllReadyADCount);
     }

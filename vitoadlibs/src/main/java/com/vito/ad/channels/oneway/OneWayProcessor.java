@@ -32,64 +32,6 @@ public class OneWayProcessor extends IProcessor {
     private ADTask adTask;
     private DownloadTask downloadTask;
     private String sessionId;
-    private IVideoPlayListener videoPlayerListener = new IVideoPlayListener() {
-        @Override
-        public void onStart() {
-            JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("start");
-            for (String url: AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmVideoStartCallBackUrls()) {
-                NetHelper.sendPostRequest(url, json, 1);
-            }
-        }
-
-        @Override
-        public void onEnd() {
-            JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("end");
-            for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmEndCallBackUrls()) {
-                NetHelper.sendPostRequest(url, json, 1);
-            }
-        }
-        @Override
-        public void onFirstQuartile() {
-            JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("firstQuartile");
-            for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmVideoFirstQuartileCallBackUrls()) {
-                NetHelper.sendPostRequest(url, json, 1);
-            }
-        }
-
-        @Override
-        public void onMid() {
-            JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("midpoint");
-            for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmVideoMidCallBackUrls()) {
-                NetHelper.sendPostRequest(url, json, 1);
-            }
-        }
-
-        @Override
-        public void onThirdQuartile() {
-            JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("thirdQuartile");
-            for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmVideoThirdQuartileCallBackUrls()) {
-                NetHelper.sendPostRequest(url, json, 1);
-            }
-        }
-    };
-
-    private IAdBaseInterface iAdBaseInterface = new IAdBaseInterface() {
-        @Override
-        public void onShow() {
-            JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("show");
-            for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmShowCallBackUrls()) {
-                NetHelper.sendPostRequest(url, json, 1);
-            }
-        }
-
-        @Override
-        public void onClose() {
-            JSONObject json =AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("close");
-            for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmCloseCallBackUrls()) {
-                NetHelper.sendPostRequest(url, json, 1);
-            }
-        }
-    };
 
     @Override
     public void getAdContent() {
@@ -105,7 +47,7 @@ public class OneWayProcessor extends IProcessor {
         String str = gson.toJson(oneWayAdContent);
         adTask.setADObject(str);
         //推广应用素材横竖屏方向，可能值： H, V, HV, VH
-        if (oneWayAdContent.getOrientation().contains("V")){
+        if (oneWayAdContent.getOrientation().startsWith("V")){
             adTask.setOrientation(1);
         }else {
             adTask.setOrientation(0);
@@ -117,37 +59,76 @@ public class OneWayProcessor extends IProcessor {
         // TODO  setCallbackURL
         //https://track.oneway.mobi/event?eventName={eventName}&publishId={publishId}&token={token}&ts={timestamp}
         if (oneWayAdContent.getTrackingEvents()!=null){
-            adTask.setmVideoStartCallBackUrls(new HashSet<String>(oneWayAdContent.getTrackingEvents().getStart()));
-            adTask.setmVideoFirstQuartileCallBackUrls(new HashSet<String>(oneWayAdContent.getTrackingEvents().getFirstQuartile()));
-            adTask.setmVideoMidCallBackUrls(new HashSet<String>(oneWayAdContent.getTrackingEvents().getMidpoint()));
-            adTask.setmEndCallBackUrls(new HashSet<String>(oneWayAdContent.getTrackingEvents().getEnd()));
-            adTask.setmClickCallBackUrls(new HashSet<String>(oneWayAdContent.getTrackingEvents().getClick()));
-            adTask.setmCloseCallBackUrls(new HashSet<String>(oneWayAdContent.getTrackingEvents().getClose()));
-            //adTask.setTrackingEventsURL(oneWayAdContent.getTrackingEvents());
+            adTask.setVideoStartCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getStart()));
+            adTask.setVideoFirstQuartileCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getFirstQuartile()));
+            adTask.setVideoMidCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getMidpoint()));
+            adTask.setVideoThirdQuartileCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getThirdQuartile()));
+            adTask.setEndCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getEnd()));
+            adTask.setClickCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getClick()));
+            adTask.setCloseCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getClose()));
+            adTask.setShowCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getShow()));
+
+            adTask.setSkipCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getSkip()));
+            adTask.setDownloadStartCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getApkDownloadStart()));
+            adTask.setDownloadEndCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getApkDownloadFinish()));
+            adTask.setInstallFinishCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getPackageAdded()));
+
+//            adTask.setmCloseCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getClose()));
+//            adTask.setmCloseCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getClose()));
         }
+        //show, start, end, click, apkDownloadStart, apkDownloadFinish, packageAdded
         long ts = System.currentTimeMillis();
-            Map<String, String> setMap = new HashMap<>();
-            setMap.put("publishId", Config.PUBLISHID);
-            setMap.put("ts", ts+"");
-            setMap.put("eventName","show");
-            setMap.put("token",oneWayToken);
-            URL url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getmShowCallBackUrls().add(url.toString());
-        setMap.put("eventName","thirdQuartile");
+        Map<String, String> setMap = new HashMap<>();
+        setMap.put("publishId", Config.PUBLISHID);
+        setMap.put("ts", ts+"");
+        setMap.put("eventName","show");
+        setMap.put("token",oneWayToken);
+        URL url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
+        adTask.getShowCallBackUrls().add(url.toString());
+        // start
+        setMap.put("eventName","start");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getmVideoThirdQuartileCallBackUrls().add(url.toString());
-        setMap.put("eventName","firstQuartile");
+        adTask.getVideoStartCallBackUrls().add(url.toString());
+        // skip
+        setMap.put("eventName","skip");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getmVideoFirstQuartileCallBackUrls().add(url.toString());
+        adTask.getSkipCallBackUrls().add(url.toString());
+        // end
         setMap.put("eventName","end");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getmEndCallBackUrls().add(url.toString());
+        adTask.getEndCallBackUrls().add(url.toString());
+        // click
+        setMap.put("eventName","click");
+        url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
+        adTask.getClickCallBackUrls().add(url.toString());
+        // apkDownloadStart
+        setMap.put("eventName","apkDownloadStart");
+        url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
+        adTask.getDownloadStartCallBackUrls().add(url.toString());
+        //apkDownloadFinish
+        setMap.put("eventName","apkDownloadFinish");
+        url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
+        adTask.getDownloadEndCallBackUrls().add(url.toString());
+        //packageAdded
+        setMap.put("eventName","packageAdded");
+        url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
+        adTask.getInstallCallBackUrls().add(url.toString());
+
+        setMap.put("eventName","thirdQuartile");
+        url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
+        adTask.getVideoThirdQuartileCallBackUrls().add(url.toString());
+
+        setMap.put("eventName","firstQuartile");
+        url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
+        adTask.getVideoFirstQuartileCallBackUrls().add(url.toString());
+
         setMap.put("eventName","close");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getmCloseCallBackUrls().add(url.toString());
+        adTask.getCloseCallBackUrls().add(url.toString());
+
         setMap.put("eventName","midpoint");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getmVideoMidCallBackUrls().add(url.toString());
+        adTask.getVideoMidCallBackUrls().add(url.toString());
 
         adTask.setRemoveOnClose(true);
 
@@ -174,11 +155,135 @@ public class OneWayProcessor extends IProcessor {
     public OneWayProcessor(){
         // 注册对应的回调方法
         android.util.Log.e("ADSDK", "onewayProcessor  注册");
+        IVideoPlayListener videoPlayerListener = new IVideoPlayListener() {
+            @Override
+            public void onStart() {
+                JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("start");
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoStartCallBackUrls()) {
+                    NetHelper.sendPostRequest(url, json, 1);
+                }
+            }
+
+            @Override
+            public void onEnd() {
+                JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("end");
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getEndCallBackUrls()) {
+                    NetHelper.sendPostRequest(url, json, 1);
+                }
+            }
+
+            @Override
+            public void onFirstQuartile() {
+                JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("firstQuartile");
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoFirstQuartileCallBackUrls()) {
+                    NetHelper.sendPostRequest(url, json, 1);
+                }
+            }
+
+            @Override
+            public void onMid() {
+                JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("midpoint");
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoMidCallBackUrls()) {
+                    NetHelper.sendPostRequest(url, json, 1);
+                }
+            }
+
+            @Override
+            public void onThirdQuartile() {
+                JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("thirdQuartile");
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoThirdQuartileCallBackUrls()) {
+                    NetHelper.sendPostRequest(url, json, 1);
+                }
+            }
+        };
         AdTaskManager.getInstance().registerIVideoPlayListener(Config.ADTYPE, videoPlayerListener);
+        IAdBaseInterface iAdBaseInterface = new IAdBaseInterface() {
+            @Override
+            public void onShow() {
+                JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("show");
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getShowCallBackUrls()) {
+                    NetHelper.sendPostRequest(url, json, 1);
+                }
+            }
+
+            @Override
+            public void onClose() {
+                JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("close");
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getCloseCallBackUrls()) {
+                    NetHelper.sendPostRequest(url, json, 1);
+                }
+            }
+
+            //•apkDownloadStart : 下载开始时回传
+            //•apkDownloadFinish : 下载完成时回传
+            //•apkDownloadError : 下载错误时回传
+            //•packageAdded : 安装完成时回传
+            //•packageReplaced : 升级时回传
+            //•packageRemoved : 卸载时回传
+            @Override
+            public void onDownLoadStart() {
+                JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance()
+                        .getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("apkDownloadStart");
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance()
+                        .getCurrentShowAdTaskId()).getDownloadStartCallBackUrls()) {
+                    NetHelper.sendPostRequest(url, json, 1);
+                }
+            }
+
+            @Override
+            public void onDownloadEnd() {
+                JSONObject json = AdTaskManager.getInstance().getAdTaskByADID
+                        (AdManager.getInstance().getCurrentShowAdTaskId())
+                        .getADObject(OneWayAdContent.class).getCallbackParams("apkDownloadFinish");
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance()
+                        .getCurrentShowAdTaskId()).getDownloadEndCallBackUrls()) {
+                    NetHelper.sendPostRequest(url, json, 1);
+                }
+            }
+
+            @Override
+            public void onDownloadError() {
+//            JSONObject json =AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance()
+//                    .getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("apkDownloadError");
+//            for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance()
+//                    .getCurrentShowAdTaskId()).()) {
+//                NetHelper.sendPostRequest(url, json, 1);
+//            }
+            }
+
+            @Override
+            public void onInstallStart() {
+//            JSONObject json =AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance()
+//                    .getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("packageAdded");
+//            for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance()
+//                    .getCurrentShowAdTaskId()).getmInstallCallBackUrls()) {
+//                NetHelper.sendPostRequest(url, json, 1);
+//            }
+            }
+
+            @Override
+            public void onInstallFinish() {
+                JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance()
+                        .getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("packageAdded");
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance()
+                        .getCurrentShowAdTaskId()).getInstallCallBackUrls()) {
+                    NetHelper.sendPostRequest(url, json, 1);
+                }
+            }
+
+            @Override
+            public void onClick() {
+                JSONObject json = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance()
+                        .getCurrentShowAdTaskId()).getADObject(OneWayAdContent.class).getCallbackParams("click");
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance()
+                        .getCurrentShowAdTaskId()).getClickCallBackUrls()) {
+                    NetHelper.sendPostRequest(url, json, 1);
+                }
+            }
+        };
         AdTaskManager.getInstance().registerIAdBaseInterface(Config.ADTYPE, iAdBaseInterface);
         ViewManager.getInstance().registerLandPageView(Config.ADTYPE, new ImplLandView2());
     }
-
 
 
     @Override
@@ -212,7 +317,7 @@ public class OneWayProcessor extends IProcessor {
 
     @Override
     public String buildRequestInfo() {
-        String result = "";
+        String result;
         long ts = System.currentTimeMillis();
         if (StringUtil.isEmpty(oneWayToken)) {
             Map<String, String> setMap = new HashMap<>();
@@ -235,7 +340,7 @@ public class OneWayProcessor extends IProcessor {
             String deviceModel = paramsModel.getModel();
             String androidId = paramsModel.getAndroidId();
             String imei = paramsModel.getImei();
-            String channel = paramsModel.getChannel();
+//            String channel = paramsModel.getChannel();
 
             param.put("placementId", Config.PLACEMENTID);//广告位ID
             param.put("deviceId", "");//	设备的广告ID （iOS填IDFA，Android填GAID）

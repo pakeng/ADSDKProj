@@ -33,7 +33,7 @@ android {
             signingConfig signingConfigs.release_config
         }
         debug {
-            signingConfig signingConfigs.release_config
+            signingConfig signingConfigs.config
         }
     }
     externalNativeBuild {

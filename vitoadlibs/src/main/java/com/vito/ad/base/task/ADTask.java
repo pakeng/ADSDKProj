@@ -51,114 +51,114 @@ public class ADTask implements Serializable {
     private HashSet<String> mSkipCallBackUrls; // 跳过
     private HashSet<String> mCloseCallBackUrls; //关闭
 
-    public void setmInstallCallBackUrls(HashSet<String> mInstallCallBackUrls) {
+    public void setInstallFinishCallBackUrls(HashSet<String> mInstallCallBackUrls) {
         this.mInstallCallBackUrls = mInstallCallBackUrls;
     }
 
-    public void setmClickCallBackUrls(HashSet<String> mClickCallBackUrls) {
+    public void setClickCallBackUrls(HashSet<String> mClickCallBackUrls) {
         this.mClickCallBackUrls = mClickCallBackUrls;
     }
 
-    public void setmDownloadStartCallBackUrls(HashSet<String> mDownloadStartCallBackUrls) {
+    public void setDownloadStartCallBackUrls(HashSet<String> mDownloadStartCallBackUrls) {
         this.mDownloadStartCallBackUrls = mDownloadStartCallBackUrls;
     }
 
-    public void setmDownloadEndCallBackUrls(HashSet<String> mDownloadEndCallBackUrls) {
+    public void setDownloadEndCallBackUrls(HashSet<String> mDownloadEndCallBackUrls) {
         this.mDownloadEndCallBackUrls = mDownloadEndCallBackUrls;
     }
 
-    public void setmShowCallBackUrls(HashSet<String> mShowCallBackUrls) {
+    public void setShowCallBackUrls(HashSet<String> mShowCallBackUrls) {
         this.mShowCallBackUrls = mShowCallBackUrls;
     }
 
-    public void setmVideoStartCallBackUrls(HashSet<String> mVideoStartCallBackUrls) {
+    public void setVideoStartCallBackUrls(HashSet<String> mVideoStartCallBackUrls) {
         this.mVideoStartCallBackUrls = mVideoStartCallBackUrls;
     }
 
-    public void setmVideoMidCallBackUrls(HashSet<String> mVideoMidCallBackUrls) {
+    public void setVideoMidCallBackUrls(HashSet<String> mVideoMidCallBackUrls) {
         this.mVideoMidCallBackUrls = mVideoMidCallBackUrls;
     }
 
-    public void setmVideoFirstQuartileCallBackUrls(HashSet<String> mVideoFirstQuartileCallBackUrls) {
+    public void setVideoFirstQuartileCallBackUrls(HashSet<String> mVideoFirstQuartileCallBackUrls) {
         this.mVideoFirstQuartileCallBackUrls = mVideoFirstQuartileCallBackUrls;
     }
 
-    public void setmVideoThirdQuartileCallBackUrls(HashSet<String> mVideoThirdQuartileCallBackUrls) {
+    public void setVideoThirdQuartileCallBackUrls(HashSet<String> mVideoThirdQuartileCallBackUrls) {
         this.mVideoThirdQuartileCallBackUrls = mVideoThirdQuartileCallBackUrls;
     }
 
-    public void setmSkipCallBackUrls(HashSet<String> mSkipCallBackUrls) {
+    public void setSkipCallBackUrls(HashSet<String> mSkipCallBackUrls) {
         this.mSkipCallBackUrls = mSkipCallBackUrls;
     }
 
-    public void setmEndCallBackUrls(HashSet<String> mEndCallBackUrls) {
+    public void setEndCallBackUrls(HashSet<String> mEndCallBackUrls) {
         this.mEndCallBackUrls = mEndCallBackUrls;
     }
 
     private HashSet<String> mEndCallBackUrls; // 结束
-    public String ADObject = "";
+    private String ADObject = "";
 
-    public HashSet<String> getmInstallCallBackUrls() {
+    public HashSet<String> getInstallCallBackUrls() {
         if (mInstallCallBackUrls == null)
             mInstallCallBackUrls = new HashSet<>();
         return mInstallCallBackUrls;
     }
 
-    public HashSet<String> getmClickCallBackUrls() {
+    public HashSet<String> getClickCallBackUrls() {
         if (mClickCallBackUrls == null)
             mClickCallBackUrls = new HashSet<>();
         return mClickCallBackUrls;
     }
 
-    public HashSet<String> getmDownloadStartCallBackUrls() {
+    public HashSet<String> getDownloadStartCallBackUrls() {
         if (mDownloadStartCallBackUrls == null)
             mDownloadStartCallBackUrls = new HashSet<>();
         return mDownloadStartCallBackUrls;
     }
 
-    public HashSet<String> getmDownloadEndCallBackUrls() {
+    public HashSet<String> getDownloadEndCallBackUrls() {
         if (mDownloadEndCallBackUrls == null)
             mDownloadEndCallBackUrls = new HashSet<>();
         return mDownloadEndCallBackUrls;
     }
 
-    public HashSet<String> getmShowCallBackUrls() {
+    public HashSet<String> getShowCallBackUrls() {
         if (mShowCallBackUrls == null)
             mShowCallBackUrls = new HashSet<>();
         return mShowCallBackUrls;
     }
 
-    public HashSet<String> getmVideoStartCallBackUrls() {
+    public HashSet<String> getVideoStartCallBackUrls() {
         if (mVideoStartCallBackUrls == null)
             mVideoStartCallBackUrls = new HashSet<>();
         return mVideoStartCallBackUrls;
     }
 
-    public HashSet<String> getmVideoMidCallBackUrls() {
+    public HashSet<String> getVideoMidCallBackUrls() {
         if (mVideoMidCallBackUrls == null)
             mVideoMidCallBackUrls = new HashSet<>();
         return mVideoMidCallBackUrls;
     }
 
-    public HashSet<String> getmVideoFirstQuartileCallBackUrls() {
+    public HashSet<String> getVideoFirstQuartileCallBackUrls() {
         if (mVideoFirstQuartileCallBackUrls == null)
             mVideoFirstQuartileCallBackUrls = new HashSet<>();
         return mVideoFirstQuartileCallBackUrls;
     }
 
-    public HashSet<String> getmVideoThirdQuartileCallBackUrls() {
+    public HashSet<String> getVideoThirdQuartileCallBackUrls() {
         if (mVideoThirdQuartileCallBackUrls == null)
             mVideoThirdQuartileCallBackUrls = new HashSet<>();
         return mVideoThirdQuartileCallBackUrls;
     }
 
-    public HashSet<String> getmSkipCallBackUrls() {
+    public HashSet<String> getSkipCallBackUrls() {
         if (mSkipCallBackUrls == null)
             mSkipCallBackUrls = new HashSet<>();
         return mSkipCallBackUrls;
     }
 
-    public HashSet<String> getmEndCallBackUrls() {
+    public HashSet<String> getEndCallBackUrls() {
         if (mEndCallBackUrls == null)
             mEndCallBackUrls = new HashSet<>();
         return mEndCallBackUrls;
@@ -180,23 +180,23 @@ public class ADTask implements Serializable {
         this.orientation = orientation;
     }
 
-    public HashSet<String> getmCloseCallBackUrls() {
+    public HashSet<String> getCloseCallBackUrls() {
         if (mCloseCallBackUrls==null)
             mCloseCallBackUrls = new HashSet<>();
         return mCloseCallBackUrls;
     }
 
-    public void setmCloseCallBackUrls(HashSet<String> mCloseCallBackUrls) {
+    public void setCloseCallBackUrls(HashSet<String> mCloseCallBackUrls) {
         this.mCloseCallBackUrls = mCloseCallBackUrls;
     }
 
-    public HashSet<String> getmStartInstallCallBackUrls() {
+    public HashSet<String> getStartInstallCallBackUrls() {
         if (mStartInstallCallBackUrls==null)
             mStartInstallCallBackUrls = new HashSet<>();
         return mStartInstallCallBackUrls;
     }
 
-    public void setmStartInstallCallBackUrls(HashSet<String> mStartInstallCallBackUrls) {
+    public void setStartInstallCallBackUrls(HashSet<String> mStartInstallCallBackUrls) {
         this.mStartInstallCallBackUrls = mStartInstallCallBackUrls;
     }
 

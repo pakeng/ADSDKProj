@@ -15,6 +15,7 @@ import android.util.DisplayMetrics;
 
 import com.vito.ADFileProvider;
 import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.managers.DownloadTaskManager;
 import com.vito.ad.managers.ReceiverManager;
 
 import java.io.File;
@@ -161,8 +162,14 @@ public class APPUtil {
      * 安装APK
      * @param context
      * @param apkPath 安装包的路径
+     * @param task
      */
-    public static void installApk(Context context, Uri apkPath) {
+    public static void installApk(Context context, Uri apkPath, DownloadTask task) {
+        ApplicationInfo applicationInfo = getAppInfoWithFilePath(context, apkPath.getPath());
+        if (applicationInfo!=null) {
+            task.setPackageName(applicationInfo.packageName);
+            DownloadTaskManager.getInstance().notifyUpDate();
+        }
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -184,9 +191,9 @@ public class APPUtil {
             File apkPath = new File(context.getExternalFilesDir(null), task.getPath());
             File apkFile = new File(apkPath, task.getName());
             Log.e(apkFile.getAbsolutePath());
-            installWithFileProvider(context, apkFile);
+            installWithFileProvider(context, apkFile, task);
         } else {
-            installApk(context, task.getStoreUri());
+            installApk(context, task.getStoreUri(), task);
         }
     }
 
@@ -366,6 +373,8 @@ public class APPUtil {
         PackageManager pm = ctx.getPackageManager();
         // TODO ERROR
         PackageInfo pi = pm.getPackageArchiveInfo(apkPath, 0);
+        if (pi==null)
+            return null;
 
         return pi.applicationInfo;
     }
@@ -385,10 +394,15 @@ public class APPUtil {
         setting.edit().putBoolean("FIRST",false);
     }
 
-    private static void installWithFileProvider(Context context,File file) {
+    private static void installWithFileProvider(Context context, File file, DownloadTask task) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         Uri apkUri = ADFileProvider.getUriForFile(context, context.getPackageName()+".FileProvider", file);
         Log.e("uri == "+apkUri.toString());
+        ApplicationInfo applicationInfo = getAppInfoWithFilePath(context, task.getStoreUri().getPath());
+        if (applicationInfo!=null) {
+            task.setPackageName(applicationInfo.packageName);
+            DownloadTaskManager.getInstance().notifyUpDate();
+        }
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.setDataAndType(apkUri, "application/vnd.android.package-archive");

@@ -14,6 +14,7 @@ public class ReceiverManager {
     private InstallReceiver installBroadcast;
 //    private ArrayList<int> checkInstalllist = new ArrayList<>();
     private ArrayList<Integer> checkInstallList = new ArrayList<>();
+    private ArrayList<String> checkInstallPackageNameList = new ArrayList<>();
 
     public static ReceiverManager getInstance(){
         if (instance == null){
@@ -36,6 +37,10 @@ public class ReceiverManager {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
         intentFilter.addAction(Intent.ACTION_PACKAGE_CHANGED);
+        intentFilter.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        intentFilter.addAction(Intent.ACTION_PACKAGE_REPLACED);
+        intentFilter.addAction(Intent.ACTION_PACKAGE_INSTALL);
+
         intentFilter.addDataScheme("package");
         installBroadcast = new InstallReceiver();
         DownloadTaskManager.getInstance().getService().registerReceiver(installBroadcast, intentFilter);
@@ -56,7 +61,8 @@ public class ReceiverManager {
         return checkInstallList;
     }
 
-    public void setCheckInstallList(ArrayList<Integer> checkInstallList) {
-        this.checkInstallList = checkInstallList;
+
+    public ArrayList<String> getCheckInstallPackageNameList() {
+        return checkInstallPackageNameList;
     }
 }

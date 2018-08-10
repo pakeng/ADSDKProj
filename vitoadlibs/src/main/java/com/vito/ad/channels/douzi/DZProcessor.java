@@ -29,49 +29,6 @@ public class DZProcessor extends IProcessor {
     private ADTask adTask;
     private DownloadTask downloadTask;
 
-    private static IVideoPlayListener videoPlayerListener = new IVideoPlayListener() {
-
-        @Override
-        public void onStart() {
-            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
-            for (String url: AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmVideoStartCallBackUrls()) {
-                NetHelper.sendGetRequest(url);
-            }
-        }
-
-        @Override
-        public void onEnd() {
-            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
-            for (String url: AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmEndCallBackUrls()) {
-                NetHelper.sendGetRequest(url);
-            }
-        }
-
-        @Override
-        public void onFirstQuartile() {
-            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
-            for (String url: AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmVideoFirstQuartileCallBackUrls()) {
-                NetHelper.sendGetRequest(url);
-            }
-        }
-
-        @Override
-        public void onMid() {
-            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
-            for (String url: AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmVideoMidCallBackUrls()) {
-                NetHelper.sendGetRequest(url);
-            }
-        }
-
-        @Override
-        public void onThirdQuartile() {
-            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
-            for (String url: AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmVideoThirdQuartileCallBackUrls()) {
-                NetHelper.sendGetRequest(url);
-            }
-        }
-    };
-
 
     @Override
     public void getAdContent() {
@@ -120,6 +77,48 @@ public class DZProcessor extends IProcessor {
     public DZProcessor(){
         android.util.Log.e("ADSDK", "DZProcessor  注册");
         // 注册对应的回调方法
+        IVideoPlayListener videoPlayerListener = new IVideoPlayListener() {
+
+            @Override
+            public void onStart() {
+//                ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoStartCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+
+            @Override
+            public void onEnd() {
+//                ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getEndCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+
+            @Override
+            public void onFirstQuartile() {
+//                ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoFirstQuartileCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+
+            @Override
+            public void onMid() {
+//                ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoMidCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+
+            @Override
+            public void onThirdQuartile() {
+//                ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoThirdQuartileCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+        };
         AdTaskManager.getInstance().registerIVideoPlayListener(Config.ADTYPE, videoPlayerListener);
         ViewManager.getInstance().registerLandPageView(Config.ADTYPE, new DZLandView());
     }
@@ -128,7 +127,7 @@ public class DZProcessor extends IProcessor {
 
     @Override
     public String buildRequestInfo() {
-        String result = null;
+        String result;
         if (StringUtil.isNotEmpty(paramsModel)) {
             JSONObject param = new JSONObject();
             try {
@@ -158,7 +157,7 @@ public class DZProcessor extends IProcessor {
                 param.put("screen_orientation", paramsModel.getSo()); //横竖屏 /1竖屏  2横屏
             } catch (JSONException e) {
                 e.printStackTrace();
-                return result;
+                return "";
             }
 
             result = NetHelper.callWithResponse(Config.getADSURL(), Config.GET_AD_METHOD, param);
@@ -178,7 +177,7 @@ public class DZProcessor extends IProcessor {
                 }
             }
         }
-        return result;
+        return "";
     }
 
     @Override

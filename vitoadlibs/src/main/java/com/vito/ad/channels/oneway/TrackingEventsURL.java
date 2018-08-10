@@ -15,6 +15,13 @@ public class TrackingEventsURL {
      •close : 广告关闭，激励/非激励性广告时必须回传。
      •click : 点击广告按钮,激励/非激励性广告时必须回传。
 
+     •apkDownloadStart : 下载开始时回传
+     •apkDownloadFinish : 下载完成时回传
+     •apkDownloadError : 下载错误时回传
+     •packageAdded : 安装完成时回传
+     •packageReplaced : 升级时回传
+     •packageRemoved : 卸载时回传
+
      */
     private List<String> start;
     private List<String> end;
@@ -25,6 +32,12 @@ public class TrackingEventsURL {
     private List<String> midpoint ;
     private List<String> firstQuartile ;
     private List<String> thirdQuartile ;
+    private List<String> apkDownloadStart ;
+    private List<String> apkDownloadFinish ;
+    private List<String> apkDownloadError ;
+    private List<String> packageAdded ;
+    private List<String> packageReplaced ;
+    private List<String> packageRemoved ;
 
     public List<String> getStart() {
         if (start==null)
@@ -114,5 +127,42 @@ public class TrackingEventsURL {
 
     public void setThirdQuartile(List<String> thirdQuartile) {
         this.thirdQuartile = thirdQuartile;
+    }
+
+
+    public List<String> getApkDownloadStart() {
+        if (apkDownloadStart==null)
+            apkDownloadStart = new ArrayList<>();
+        return apkDownloadStart;
+    }
+
+    public List<String> getApkDownloadFinish() {
+        if (apkDownloadFinish==null)
+            apkDownloadFinish = new ArrayList<>();
+        return apkDownloadFinish;
+    }
+
+    public List<String> getApkDownloadError() {
+        if (apkDownloadError==null)
+            apkDownloadError = new ArrayList<>();
+        return apkDownloadError;
+    }
+
+    public List<String> getPackageAdded() {
+        if (packageAdded==null)
+            packageAdded = new ArrayList<>();
+        return packageAdded;
+    }
+
+    public List<String> getPackageReplaced() {
+        if (packageReplaced==null)
+            packageReplaced = new ArrayList<>();
+        return packageReplaced;
+    }
+
+    public List<String> getPackageRemoved() {
+        if (packageRemoved==null)
+            packageRemoved = new ArrayList<>();
+        return packageRemoved;
     }
 }

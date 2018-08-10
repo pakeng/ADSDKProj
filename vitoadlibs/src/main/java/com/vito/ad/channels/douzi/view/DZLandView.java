@@ -58,7 +58,7 @@ public class DZLandView extends ILandView {
 
     @Override
     public void onClose(ADTask adTask) {
-        for (String url: adTask.getmClickCallBackUrls()) {
+        for (String url: adTask.getClickCallBackUrls()) {
             NetHelper.sendGetRequest(url);
         }
         super.onClose(adTask);

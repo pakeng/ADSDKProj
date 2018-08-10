@@ -37,61 +37,6 @@ public class LMProcessor extends IProcessor {
     private ADTask adTask;
     private DownloadTask downloadTask;
 
-    private static IVideoPlayListener videoPlayerListener = new IVideoPlayListener() {
-
-        @Override
-        public void onStart() {
-            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
-            for (String url: AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmVideoStartCallBackUrls()) {
-                NetHelper.sendGetRequest(url);
-            }
-        }
-
-        @Override
-        public void onEnd() {
-            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
-            for (String url: AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmEndCallBackUrls()) {
-                NetHelper.sendGetRequest(url);
-            }
-        }
-
-        @Override
-        public void onFirstQuartile() {
-            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
-            for (String url: AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmVideoFirstQuartileCallBackUrls()) {
-                NetHelper.sendGetRequest(url);
-            }
-        }
-
-        @Override
-        public void onMid() {
-            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
-            for (String url: AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmVideoMidCallBackUrls()) {
-                NetHelper.sendGetRequest(url);
-            }
-        }
-
-        @Override
-        public void onThirdQuartile() {
-            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
-            for (String url: AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getmVideoThirdQuartileCallBackUrls()) {
-                NetHelper.sendGetRequest(url);
-            }
-        }
-    };
-
-    private static IAdBaseInterface iAdBaseInterface = new IAdBaseInterface() {
-        @Override
-        public void onShow() {
-
-        }
-
-        @Override
-        public void onClose() {
-            //
-        }
-    };
-
     private static IUrlBuildInterface iUrlBuildInterface  = new IUrlBuildInterface() {
         @Override
         public String build(String srcUrl) {
@@ -134,13 +79,13 @@ public class LMProcessor extends IProcessor {
 
         //处理回调
         LMTracker tracker = lmAdContent.getTracker();
-        adTask.setmEndCallBackUrls(new HashSet<String>(tracker.getPlay_end_trackers()));
-        adTask.setmVideoStartCallBackUrls(new HashSet<String>(tracker.getPlay_start_trackers()));
-        adTask.setmStartInstallCallBackUrls(new HashSet<String>(tracker.getPage_star_install_trackers()));
-        adTask.setmDownloadStartCallBackUrls(new HashSet<String>(tracker.getPage_star_down_trackers()));
-        adTask.setmDownloadEndCallBackUrls(new HashSet<String>(tracker.getPage_down_trackers()));
-        adTask.setmInstallCallBackUrls(new HashSet<String>(tracker.getPage_install_trackers()));
-        adTask.setmClickCallBackUrls(new HashSet<String>(tracker.getPage_click_trackers()));
+        adTask.setEndCallBackUrls(new HashSet<>(tracker.getPlay_end_trackers()));
+        adTask.setVideoStartCallBackUrls(new HashSet<>(tracker.getPlay_start_trackers()));
+        adTask.setStartInstallCallBackUrls(new HashSet<>(tracker.getPage_star_install_trackers()));
+        adTask.setDownloadStartCallBackUrls(new HashSet<>(tracker.getPage_star_down_trackers()));
+        adTask.setDownloadEndCallBackUrls(new HashSet<>(tracker.getPage_down_trackers()));
+        adTask.setInstallFinishCallBackUrls(new HashSet<>(tracker.getPage_install_trackers()));
+        adTask.setClickCallBackUrls(new HashSet<>(tracker.getPage_click_trackers()));
 
         // 生成DownloadTask
         downloadTask = new DownloadTask();
@@ -174,15 +119,110 @@ public class LMProcessor extends IProcessor {
     public LMProcessor(){
         android.util.Log.e("ADSDK", "LMProcessor 注册");
         // 注册对应的回调方法
+        IVideoPlayListener videoPlayerListener = new IVideoPlayListener() {
+
+            @Override
+            public void onStart() {
+//            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoStartCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+
+            @Override
+            public void onEnd() {
+//            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getEndCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+
+            @Override
+            public void onFirstQuartile() {
+//            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoFirstQuartileCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+
+            @Override
+            public void onMid() {
+//            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoMidCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+
+            @Override
+            public void onThirdQuartile() {
+//            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoThirdQuartileCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+        };
         AdTaskManager.getInstance().registerIVideoPlayListener(Config.ADTYPE, videoPlayerListener);
         ViewManager.getInstance().registerLandPageView(Config.ADTYPE, new LMLandView());
         ViewManager.getInstance().registerUrlBuildInterface(Config.ADTYPE, iUrlBuildInterface);
+        IAdBaseInterface iAdBaseInterface = new IAdBaseInterface() {
+            @Override
+            public void onShow() {
+
+            }
+
+            @Override
+            public void onClose() {
+                //
+            }
+
+            @Override
+            public void onDownLoadStart() {
+//            ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getDownloadStartCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+
+            @Override
+            public void onDownloadEnd() {
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getDownloadEndCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+
+            @Override
+            public void onDownloadError() {
+
+            }
+
+            @Override
+            public void onInstallStart() {
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getStartInstallCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+
+            @Override
+            public void onInstallFinish() {
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getInstallCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+
+            @Override
+            public void onClick() {
+                for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getClickCallBackUrls()) {
+                    NetHelper.sendGetRequest(url);
+                }
+            }
+        };
+        AdTaskManager.getInstance().registerIAdBaseInterface(Config.ADTYPE, iAdBaseInterface);
     }
 
 
     @Override
     public String buildRequestInfo() {
-        String jmediakey = Config.SECRETKEY;
+        String media_key = Config.SECRETKEY;
         String result = null;
         if (StringUtil.isNotEmpty(paramsModel)) {
             JSONObject param = new JSONObject();
@@ -193,11 +233,11 @@ public class LMProcessor extends IProcessor {
                 param.put("ua",paramsModel.getUa());//取Webview的UA
                 param.put("appver", paramsModel.getAppVersion());//当前APP的版本号
                 param.put("ip", paramsModel.getIp());//IP
-                param.put("jmediakey", jmediakey);  //开发者Key
+                param.put("jmediakey", media_key);  //开发者Key
                 param.put("addr", paramsModel.getAddr()); //地址
                 String sdk = paramsModel.getSdk();
                 String appPackage = paramsModel.getAppPackage();
-                String sign = MD5Util.encrypt(jmediakey + sdk + appPackage).toUpperCase();
+                String sign = MD5Util.encrypt(media_key + sdk + appPackage).toUpperCase();
                 String imei = paramsModel.getImei();
                 String channel = paramsModel.getChannel();
                 param.put("sign", sign);//签名
@@ -218,14 +258,14 @@ public class LMProcessor extends IProcessor {
                 param.put("screen_orientation", paramsModel.getSo()); //横竖屏 /1竖屏  2横屏
             } catch (JSONException e) {
                 e.printStackTrace();
-                return result;
+                return null;
             }
 
             try {
                 result = NetHelper.doGetHttpResponse("http://api.bulemobi.cn:6001/api/api_request.aspx?param=" + URLEncoder.encode(param.toString(), "UTF-8"), 1);
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
-                return result;
+                return null;
             }
             //判断返回数据是否返回广告
             if (StringUtil.isNotEmpty(result)) {

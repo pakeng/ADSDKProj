@@ -16,6 +16,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.vito.ad.base.task.ADTask;
 import com.vito.ad.base.task.DownloadTask;
 import com.vito.ad.channels.oneway.OneWayAdContent;
+import com.vito.ad.managers.AdTaskManager;
 import com.vito.ad.managers.DownloadTaskManager;
 import com.vito.ad.views.ILandView;
 import com.vito.utils.Log;
@@ -69,6 +70,7 @@ public class ImplLandView2 extends ILandView{
             public void onClick(View v) {
                 DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByADTask(mADTask);
                 DownloadTaskManager.getInstance().pushTask(downloadTask);
+                AdTaskManager.getInstance().getIAdBaseInterface(mADTask).onClick();
                 Log.e("ADTEST", "click small download");
                 onClose(mADTask);
             }
@@ -81,6 +83,7 @@ public class ImplLandView2 extends ILandView{
                 if (currentDownloadTask!=null)
                     currentDownloadTask.setApkDownload(true);
                 DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByADTask(mADTask);
+                AdTaskManager.getInstance().getIAdBaseInterface(mADTask).onClick();
                 DownloadTaskManager.getInstance().pushTask(downloadTask);
                 Log.e("ADTEST", "click download");
                 onClose(mADTask);

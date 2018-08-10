@@ -110,7 +110,6 @@ public class DownloadTaskManager {
             isNeedStartTask = true;
             return false;
         }
-
         binder.getService().startTask();
 
         return true;

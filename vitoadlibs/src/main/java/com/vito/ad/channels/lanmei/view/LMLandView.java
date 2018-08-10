@@ -8,11 +8,11 @@ import android.view.View;
 import android.widget.Button;
 
 import com.vito.ad.base.task.ADTask;
+import com.vito.ad.managers.AdTaskManager;
 import com.vito.ad.managers.ViewManager;
 import com.vito.ad.views.ILandView;
 import com.vito.ad.views.webview.MyWebView;
 import com.vito.utils.Log;
-import com.vito.utils.network.NetHelper;
 
 import vito.com.vitoadlibs.R;
 
@@ -42,6 +42,12 @@ public class LMLandView extends ILandView {
                 return false;
             }
         });
+        coverView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AdTaskManager.getInstance().getIAdBaseInterface(adTask).onClick();
+            }
+        });
         Button cloaeBtn = coverLayout.findViewById(R.id.close_ad);
         cloaeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,9 +64,6 @@ public class LMLandView extends ILandView {
 
     @Override
     public void onClose(ADTask adTask) {
-        for (String url: adTask.getmClickCallBackUrls()) {
-            NetHelper.sendGetRequest(url);
-        }
         super.onClose(adTask);
 
     }

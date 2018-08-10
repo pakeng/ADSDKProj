@@ -1,5 +1,6 @@
 package com.vito.ad.managers;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.net.Uri;
 
@@ -22,7 +23,9 @@ import java.util.Iterator;
 public class AdTaskManager {
     private static AdTaskManager instance = null;
     private int currentADID = -1;
+    @SuppressLint("UseSparseArrays")
     private HashMap<Integer, IVideoPlayListener> iVideoPlayListenerHashMap = new HashMap<>();
+    @SuppressLint("UseSparseArrays")
     private HashMap<Integer, IAdBaseInterface> iAdBaseInterfaceHashMap = new HashMap<>();
     private Activity targetAdActivity = null; // 广告sdk的载体
     private AdTaskManager(){ Init();}

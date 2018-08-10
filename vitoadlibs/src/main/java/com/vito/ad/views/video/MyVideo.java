@@ -7,7 +7,6 @@ import android.media.MediaPlayer;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.VideoView;
 
@@ -95,9 +94,9 @@ public class MyVideo extends VideoView{
             //首先获得原来的高度
             int mHeight = video_container.getHeight();
             //重新制定高度
-            ViewGroup.LayoutParams params = video_container.getLayoutParams();
-            params.height = ViewGroup.LayoutParams.MATCH_PARENT;
-            video_container.setLayoutParams(params);
+//            ViewGroup.LayoutParams params = video_container.getLayoutParams();
+//            params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+//            video_container.setLayoutParams(params);
     }
 
     @Override

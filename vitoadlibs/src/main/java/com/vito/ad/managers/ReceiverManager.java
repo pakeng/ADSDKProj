@@ -2,9 +2,11 @@ package com.vito.ad.managers;
 
 import android.content.Intent;
 import android.content.IntentFilter;
-import com.vito.utils.Log;
 
+import com.google.gson.Gson;
 import com.vito.receivers.InstallReceiver;
+import com.vito.utils.Log;
+import com.vito.utils.SharedPreferencesUtil;
 
 import java.util.ArrayList;
 
@@ -26,7 +28,23 @@ public class ReceiverManager {
         return instance;
     }
 
-    private ReceiverManager(){};
+    private ReceiverManager(){
+        String src = SharedPreferencesUtil.getStringValue(AdManager.mContext, "checklist", "checklist");
+        if (!src.isEmpty()){
+            try {
+
+                Gson gson = new Gson();
+                checkInstallList = gson.fromJson(src, checkInstallList.getClass());
+
+            }catch (Exception e){
+                Log.e("error"+e.toString());
+            }finally {
+                if (checkInstallList==null){
+                    checkInstallList = new ArrayList<>();
+                }
+            }
+        }
+    }
 
 
     /**
@@ -64,5 +82,12 @@ public class ReceiverManager {
 
     public ArrayList<String> getCheckInstallPackageNameList() {
         return checkInstallPackageNameList;
+    }
+
+    public void notifyUpdate() {
+        Gson gson = new Gson();
+        gson.toJson(checkInstallList);
+        String src = gson.toString();
+        SharedPreferencesUtil.putStringValue(AdManager.mContext, "checklist", "checklist", src);
     }
 }

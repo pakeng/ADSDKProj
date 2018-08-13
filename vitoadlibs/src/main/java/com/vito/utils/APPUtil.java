@@ -185,6 +185,7 @@ public class APPUtil {
      */
     public static void installApkWithTask(Context context, DownloadTask task) {
         ReceiverManager.getInstance().getCheckInstallList().add(task.getId());
+        ReceiverManager.getInstance().notifyUpdate();
         // 设置安装监听
         ReceiverManager.getInstance().registerBroadcast();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

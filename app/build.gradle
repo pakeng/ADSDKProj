@@ -8,6 +8,12 @@ android {
             storeFile file('C:/Users/Vito_d/Documents/WorkSpace/keystore/debug.jks')
             storePassword '123456'
         }
+        config {
+            keyAlias 'ddx.keystore'
+            keyPassword '123456'
+            storeFile file('D:/SeaProject/apk/ddx.keystore')
+            storePassword '123456'
+        }
     }
     compileSdkVersion 27
     defaultConfig {

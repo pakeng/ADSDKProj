@@ -4,20 +4,21 @@ import android.content.Intent;
 import android.content.IntentFilter;
 
 import com.google.gson.Gson;
+import com.vito.ad.base.entity.CheckInstallList;
 import com.vito.receivers.InstallReceiver;
 import com.vito.utils.Log;
 import com.vito.utils.SharedPreferencesUtil;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ReceiverManager {
 
     private static ReceiverManager instance = null;
     private InstallReceiver installBroadcast;
 //    private ArrayList<int> checkInstalllist = new ArrayList<>();
-    private ArrayList<Integer> checkInstallList = new ArrayList<>();
-    private ArrayList<String> checkInstallPackageNameList = new ArrayList<>();
-
+    private List<Integer> checkList = new ArrayList<>();
+    private CheckInstallList checkInstallList = null;
     public static ReceiverManager getInstance(){
         if (instance == null){
             synchronized (ReceiverManager.class){
@@ -29,18 +30,20 @@ public class ReceiverManager {
     }
 
     private ReceiverManager(){
-        String src = SharedPreferencesUtil.getStringValue(AdManager.mContext, "checklist", "checklist");
-        if (!src.isEmpty()){
+        // BUG
+        String src = SharedPreferencesUtil.getStringValue(AdManager.mContext, "checkinstalllist", "checklist");
+        if (src.isEmpty()){
             try {
-
                 Gson gson = new Gson();
-                checkInstallList = gson.fromJson(src, checkInstallList.getClass());
+                checkInstallList = gson.fromJson(src, CheckInstallList.class);
 
             }catch (Exception e){
                 Log.e("error"+e.toString());
             }finally {
-                if (checkInstallList==null){
-                    checkInstallList = new ArrayList<>();
+                if (checkInstallList ==null){
+                    checkList = new ArrayList<>();
+                }else {
+                    checkList = checkInstallList.getCheckInstallList();
                 }
             }
         }
@@ -75,19 +78,16 @@ public class ReceiverManager {
         }
     }
 
-    public ArrayList<Integer> getCheckInstallList() {
-        return checkInstallList;
+    public List<Integer> getCheckInstallList() {
+        return checkList;
     }
 
-
-    public ArrayList<String> getCheckInstallPackageNameList() {
-        return checkInstallPackageNameList;
-    }
 
     public void notifyUpdate() {
         Gson gson = new Gson();
-        gson.toJson(checkInstallList);
-        String src = gson.toString();
-        SharedPreferencesUtil.putStringValue(AdManager.mContext, "checklist", "checklist", src);
+        checkInstallList.setCheckInstallList(checkList);
+        String src = gson.toJson(checkInstallList);
+        SharedPreferencesUtil.putStringValue(AdManager.mContext, "checkinstalllist", "checklist", src);
+
     }
 }

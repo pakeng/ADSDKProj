@@ -185,6 +185,7 @@ public class APPUtil {
      */
     public static void installApkWithTask(Context context, DownloadTask task) {
         ReceiverManager.getInstance().getCheckInstallList().add(task.getId());
+        Log.e("add check list");
         ReceiverManager.getInstance().notifyUpdate();
         // 设置安装监听
         ReceiverManager.getInstance().registerBroadcast();
@@ -402,6 +403,7 @@ public class APPUtil {
         ApplicationInfo applicationInfo = getAppInfoWithFilePath(context, task.getStoreUri().getPath());
         if (applicationInfo!=null) {
             task.setPackageName(applicationInfo.packageName);
+            Log.e("read packageName from file = "+ applicationInfo.packageName);
             DownloadTaskManager.getInstance().notifyUpDate();
         }
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

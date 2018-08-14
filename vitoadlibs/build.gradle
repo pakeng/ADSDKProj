@@ -56,7 +56,7 @@ ext {
     // 最后生成依赖 compile 'yourGroup:yourArtifactId:yourVersion'
     yourGroup = 'com.pinode.vito.adsdk'
     yourArtifactId = 'adsdk'
-    yourVersion = '1.0.5-release'
+    yourVersion = '1.1.0-release'
 
 
     // 此文件中存储的是 bintray 的敏感信息，用户名和key

@@ -31,7 +31,9 @@ public class ReceiverManager {
 
     private ReceiverManager(){
         // BUG
+        Log.e("init receiverManager");
         String src = SharedPreferencesUtil.getStringValue(AdManager.mContext, "checkinstalllist", "checklist");
+        Log.e("init receiverManager src = "+src);
         if (src.isEmpty()){
             try {
                 Gson gson = new Gson();
@@ -46,6 +48,8 @@ public class ReceiverManager {
                     checkList = checkInstallList.getCheckInstallList();
                 }
             }
+        }else {
+            checkList = new ArrayList<>();
         }
     }
 
@@ -79,12 +83,16 @@ public class ReceiverManager {
     }
 
     public List<Integer> getCheckInstallList() {
+        if (checkList==null)
+            checkList = new ArrayList<>();
         return checkList;
     }
 
 
     public void notifyUpdate() {
         Gson gson = new Gson();
+        if (checkInstallList == null)
+            checkInstallList = new CheckInstallList();
         checkInstallList.setCheckInstallList(checkList);
         String src = gson.toJson(checkInstallList);
         SharedPreferencesUtil.putStringValue(AdManager.mContext, "checkinstalllist", "checklist", src);

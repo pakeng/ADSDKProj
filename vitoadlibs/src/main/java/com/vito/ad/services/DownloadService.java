@@ -248,9 +248,8 @@ public class DownloadService extends Service {
     }
 
     private void startNextTask() {
-        if (!taskList.isEmpty()){
+        if (taskList!=null&&!taskList.isEmpty()){
             DownloadTask task = taskList.get(0);
-            taskList.remove(task);
             if (task.getType() == Constants.ADVIDEO){
                 downloadVideo(task);
             }else {
@@ -259,6 +258,7 @@ public class DownloadService extends Service {
                     AdTaskManager.getInstance().getIAdBaseInterface(adTask).onDownLoadStart();
                 downloadApk(task);
             }
+            taskList.remove(task);
         }
 
 

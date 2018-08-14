@@ -4,6 +4,7 @@ import android.util.Base64;
 
 import com.google.gson.Gson;
 import com.vito.ad.base.entity.VideoDetail;
+import com.vito.ad.base.interfaces.IAdBaseInterface;
 import com.vito.ad.base.processor.IProcessor;
 import com.vito.ad.base.task.ADTask;
 import com.vito.ad.base.task.DownloadTask;
@@ -121,6 +122,47 @@ public class DZProcessor extends IProcessor {
         };
         AdTaskManager.getInstance().registerIVideoPlayListener(Config.ADTYPE, videoPlayerListener);
         ViewManager.getInstance().registerLandPageView(Config.ADTYPE, new DZLandView());
+        AdTaskManager.getInstance().registerIAdBaseInterface(Config.ADTYPE, new IAdBaseInterface() {
+            @Override
+            public void onShow() {
+
+            }
+
+            @Override
+            public void onClose() {
+
+            }
+
+            @Override
+            public void onDownLoadStart() {
+
+            }
+
+            @Override
+            public void onDownloadEnd() {
+
+            }
+
+            @Override
+            public void onDownloadError() {
+
+            }
+
+            @Override
+            public void onInstallStart() {
+
+            }
+
+            @Override
+            public void onInstallFinish() {
+
+            }
+
+            @Override
+            public void onClick() {
+
+            }
+        });
     }
 
 

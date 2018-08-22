@@ -27,7 +27,7 @@ public class FileUtil {
     }
 
     public static boolean deleteFile(Uri uri){
-        File file = new File(uri.toString());
+        File file = new File(uri.getPath());
         if (file.exists()){
             file.delete();
             return true;

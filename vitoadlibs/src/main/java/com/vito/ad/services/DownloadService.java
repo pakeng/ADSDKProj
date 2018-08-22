@@ -62,7 +62,7 @@ public class DownloadService extends Service {
     private DownloadChangeObserver downloadObserver;
     private BroadcastReceiver downLoadBroadcast;
     private ScheduledExecutorService scheduledExecutorService;
-
+    private boolean isDownloading = false;
 
 
     @Override
@@ -200,16 +200,6 @@ public class DownloadService extends Service {
         for (DownloadTask task : Tasks) {
             if (task.isDwonloading()||task.isDownloadCompleted()){
                 continue;
-            }else if (FileUtil.isFileExists(
-                        Uri.withAppendedPath(
-                                Uri.fromFile(
-                                        FileUtil.getDestinationInExternalPublicDir(
-                                                AdManager.mContext.getApplicationContext(),
-                                                task.getPath())),
-                                task.getName()))) {
-                if (task.getType()!=Constants.APK_DOWNLOAD)
-                    onDownloadCompleted(Uri.withAppendedPath(Uri.fromFile(FileUtil.getDestinationInExternalPublicDir(AdManager.mContext.getApplicationContext(), task.getPath())), task.getName()), task);
-                continue;
             }else{
                 taskList.add(task);
             }
@@ -238,6 +228,7 @@ public class DownloadService extends Service {
                             }
                         }
                     }
+                    isDownloading = false;
                     startNextTask();
                     break;
 
@@ -248,8 +239,25 @@ public class DownloadService extends Service {
     }
 
     private void startNextTask() {
+        if (isDownloading)
+            return;
+
         if (taskList!=null&&!taskList.isEmpty()){
             DownloadTask task = taskList.get(0);
+
+            Uri uri = Uri.withAppendedPath(
+                    Uri.fromFile(
+                            FileUtil.getDestinationInExternalPublicDir(
+                                    AdManager.mContext.getApplicationContext(),
+                                    task.getPath())),
+                    task.getName());
+            if (FileUtil.isFileExists(uri)) {
+                onDownloadCompleted(uri, task);
+                taskList.remove(task);
+                return;
+            }
+
+            isDownloading = true;
             if (task.getType() == Constants.ADVIDEO){
                 downloadVideo(task);
             }else {
@@ -259,10 +267,9 @@ public class DownloadService extends Service {
                 downloadApk(task);
             }
             taskList.remove(task);
+        }else{
+            isDownloading = false;
         }
-
-
-
     }
 
     private void onDownloadCompleted(Uri downIdUri, DownloadTask task) {

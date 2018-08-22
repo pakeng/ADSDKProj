@@ -65,13 +65,13 @@ public class AdManager {
                     DownloadTaskManager.getInstance();
                     AdTaskManager.getInstance();
                     CallBackRequestUtil.Init(ctx);
-                    // 注册 processer
-                    OneWayProcessor oneWayProcesser = new OneWayProcessor();
-                    LMProcessor lmProcesser = new LMProcessor();
-                    DZProcessor dzProcesser = new DZProcessor();
-                    ProcesserManager.getInstance().registerProcesser(oneWayProcesser.getType(), oneWayProcesser );
-                    ProcesserManager.getInstance().registerProcesser(dzProcesser.getType(), dzProcesser );
-                    ProcesserManager.getInstance().registerProcesser(lmProcesser.getType(), lmProcesser);
+                    // 注册 processor
+                    OneWayProcessor oneWayProcessor = new OneWayProcessor();
+                    LMProcessor lmProcessor = new LMProcessor();
+                    DZProcessor dzProcessor = new DZProcessor();
+                    ProcesserManager.getInstance().registerProcesser(oneWayProcessor.getType(), oneWayProcessor );
+                    ProcesserManager.getInstance().registerProcesser(dzProcessor.getType(), dzProcessor );
+                    ProcesserManager.getInstance().registerProcesser(lmProcessor.getType(), lmProcessor);
                 }
             }
         }

@@ -148,4 +148,5 @@ public class MyVideo extends VideoView{
     public void setiVideoPlayListener(IVideoPlayListener iVideoPlayListener) {
         this.iVideoPlayListener = iVideoPlayListener;
     }
+
 }

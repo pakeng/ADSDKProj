@@ -19,10 +19,11 @@ import com.vito.ad.managers.ViewManager;
 import com.vito.ad.views.video.MyVideo;
 import com.vito.ad.views.video.interfaces.IVideoplayInfo;
 import com.vito.utils.Log;
+import com.vito.utils.file.FileUtil;
 
 import vito.com.vitoadlibs.R;
 
-public class PlayerActivity extends AppCompatActivity {
+public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.OnErrorListener {
     private MyVideo videoView;
     private View video_layout;
     private ADTask adTask;
@@ -78,6 +79,9 @@ public class PlayerActivity extends AppCompatActivity {
                 //videoView.setScreenOrientation(PlayerActivity.this, ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, video_layout);
             }
         });
+
+        videoView.setOnErrorListener(this);
+
         videoView.setScreenOrientation(this, adTask.getOrientation(), video_layout);
         videoView.setVideoURI(downLoadTask.getStoreUri());
         videoView.setiVideoplayInfo(new IVideoplayInfo() {
@@ -133,5 +137,19 @@ public class PlayerActivity extends AppCompatActivity {
     protected void onDestroy() {
         videoView.suspend();
         super.onDestroy();
+    }
+
+    @Override
+    public boolean onError(MediaPlayer mp, int what, int extra) {
+        Log.e("error what = "+ what+ " extra = "+ extra);
+        downLoadTask.setDownloadCompleted(false);
+        downLoadTask.setReDownload();
+        DownloadTaskManager.getInstance().notifyUpDate();
+        FileUtil.deleteFile(downLoadTask.getStoreUri());
+        videoView.stopPlayback(); //播放异常，则停止播放，防止弹窗使界面阻塞
+        videoView.setVisibility(View.INVISIBLE);
+        video_layout.setVisibility(View.INVISIBLE);
+        landing_parentLayout.setVisibility(View.VISIBLE);
+        return true;
     }
 }

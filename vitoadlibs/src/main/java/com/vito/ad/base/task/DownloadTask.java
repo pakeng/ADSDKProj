@@ -120,6 +120,10 @@ public class DownloadTask implements Serializable {
         this.downloadId = downloadId;
     }
 
+    public void setReDownload() {
+        isDwonloading = false;
+    }
+
     public boolean isDwonloading() {
         return isDwonloading;
     }

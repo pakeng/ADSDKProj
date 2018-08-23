@@ -345,24 +345,31 @@ public class DeviceInfo {
             WebView web = new WebView(m_pContext);
             WebSettings webSettings = web.getSettings();
             ua = webSettings.getUserAgentString();
-            Log.e("DeviceInfo", "ua = "+  ua);
         }
         return ua;
     }
 
     public  String getOperator( ) {
 
-
+        /**
+         * 中国国家代码460
+         * 中国移动系统使用00、02、04、07，
+         * 中国联通GSM系统使用01、06、09，
+         * 中国电信CDMA系统使用03、05、电信4G使用11，
+         * 中国铁通系统使用20。
+         */
         String ProvidersName = "";
         TelephonyManager telephonyManager = (TelephonyManager) m_pContext.getSystemService(Context.TELEPHONY_SERVICE);
         String IMSI = telephonyManager.getSubscriberId();
         if (IMSI != null) {
             if (IMSI.startsWith("46000") || IMSI.startsWith("46002") || IMSI.startsWith("46007")) {
                 ProvidersName = "中国移动";
-            } else if (IMSI.startsWith("46001")  || IMSI.startsWith("46006")) {
+            } else if (IMSI.startsWith("46001")  || IMSI.startsWith("46006") || IMSI.startsWith("46009")) {
                 ProvidersName = "中国联通";
-            } else if (IMSI.startsWith("46003")) {
+            } else if (IMSI.startsWith("46003")||IMSI.startsWith("46005")||IMSI.startsWith("46011")) {
                 ProvidersName = "中国电信";
+            }else if (IMSI.startsWith("46020")){
+                ProvidersName = "中国铁通";
             }
             return ProvidersName;
         } else {

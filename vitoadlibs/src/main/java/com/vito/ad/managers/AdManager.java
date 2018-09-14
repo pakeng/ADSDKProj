@@ -4,10 +4,15 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.vito.ad.base.entity.ADServerResponse;
+import com.vito.ad.base.interfaces.IInstallListener;
 import com.vito.ad.base.interfaces.IPrepareCompleteCallBack;
 import com.vito.ad.base.interfaces.IShowCallBack;
 import com.vito.ad.base.processor.IProcessor;
@@ -29,9 +34,13 @@ import com.vito.utils.network.NetHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.vito.utils.Log.isDebug;
 
@@ -55,7 +64,10 @@ public class AdManager {
     private String mDeviceID;
     private String mChannel;
     private String subChannelStr;
+    private Map<String, IInstallListener> installListeners = new HashMap<>();
 
+    // 独立下载的配置数据
+    private Map<String, Integer> apkDownloadMap;
 
     public static AdManager InitAdManager(Activity ctx){
         if (instance==null){
@@ -109,12 +121,27 @@ public class AdManager {
         return instance;
     }
 
-
+    // 添加读取配置的方法
     private AdManager(Activity ctx){
         mContext = ctx;
+        InitApkDownloadMap();
         InitAnalysisConfigData();
         prepareAdInfo();
 
+    }
+
+    private void InitApkDownloadMap() {
+        // TODO  读取文件，初始化之前的数据
+        String map_json = SharedPreferencesUtil.getStringValue(AdManager.mContext, Constants.APK_DOWNLOAD_MAP_CONFIG, "apk_download_map");
+        // 反序列化
+        Gson gson = new Gson();
+        Type type = new TypeToken<ConcurrentHashMap<String, Integer>>(){}.getType();
+        ConcurrentHashMap<String, Integer> map = gson.fromJson(map_json, type);
+        if (map!=null){
+            apkDownloadMap = map;
+        }else {
+            apkDownloadMap = new ConcurrentHashMap<>();
+        }
     }
 
     private String prepareAdInfo(){
@@ -376,6 +403,110 @@ public class AdManager {
         }else{
             subChannelStr = "error";
         }
-  }
+    }
 
+    public void setInstallListener(String packageName, IInstallListener listener){
+        this.installListeners.put(packageName, listener);
+    }
+
+    public void notifyApkInstalled(String packageName, DownloadTask downloadTask) {
+        if (installListeners!=null&&installListeners.size()>0){
+              IInstallListener listener = installListeners.get(packageName);
+              if (listener!=null)
+                  listener.onInstallSuccess();
+        }
+
+        // 安装成功移除对应的任务记录
+        apkDownloadMap.remove(downloadTask.getUrl());
+        DownloadTaskManager.getInstance().removeTaskByDownloadId(downloadTask.getDownloadId());
+    }
+
+    public void notifyApkUninstalled(String packageName) {
+        if (installListeners!=null&&installListeners.size()>0){
+            IInstallListener listener = installListeners.get(packageName);
+            if (listener!=null)
+                listener.onUninstall();
+        }
+    }
+
+    public void startDownloadApkWithUrl(String url, String packageName){
+        if (apkDownloadMap.get(url)!=null)
+            return;
+        DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByURL(url, packageName);
+        DownloadTaskManager.getInstance().pushTask(downloadTask);
+        apkDownloadMap.put(url, downloadTask.getId());
+    }
+
+    public void startDownloadApkWithUrl(String url, String packageName, IInstallListener listener){
+        if (apkDownloadMap.get(url)!=null)
+            return;
+        installListeners.put(packageName, listener);
+        DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByURL(url, packageName);
+        DownloadTaskManager.getInstance().pushTask(downloadTask);
+        apkDownloadMap.put(url, downloadTask.getId());
+    }
+
+    /**
+     * @param url like this: "odapp://com.odao.fish"
+     * @return true 可以拉起， false 不能拉起
+     */
+    public boolean checkAppStrap(String url){
+        PackageManager packageManager = mContext.getPackageManager();
+        Intent mIntent = new Intent();
+        mIntent.setData(Uri.parse(url));
+        List<ResolveInfo> activities = packageManager.queryIntentActivities(mIntent, 0);
+        return activities.size()>0;
+    }
+
+    /**
+     * @param url like this: "odapp://com.odao.fish"
+     * @return true 拉起成功， false 拉起失败
+     */
+    public boolean pullAppWithUrl(String url, Bundle bundle){
+        PackageManager packageManager = mContext.getPackageManager();
+        Intent mIntent = new Intent();
+        if (bundle!=null)
+            mIntent.putExtra("StartBundle", bundle);
+        mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        mIntent.setData(Uri.parse(url));
+        List<ResolveInfo> activities = packageManager.queryIntentActivities(mIntent, 0);
+        if (activities.size()>0){
+            mContext.startActivity(mIntent);
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    /**
+     * 下载失败回调
+     */
+    public void notifyDownloadApkFailed(long downloadId) {
+        DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByDownloadId(downloadId);
+        if (downloadTask!=null){
+            IInstallListener listener = installListeners.get(downloadTask.getPackageName());
+            if (listener!=null){
+                listener.onDownloadFailed();
+            }
+            apkDownloadMap.remove(downloadTask.getUrl());
+            DownloadTaskManager.getInstance().removeTaskByDownloadId(downloadTask.getDownloadId());
+        }
+    }
+
+    public Map<String, Integer> getApkDownloadMap() {
+        return apkDownloadMap;
+    }
+
+    /**
+     * 更新进度条
+     * @param packageName 包名
+     * @param p 进度 1-100;
+     */
+    public void updateDownloadProgress(String packageName, int p) {
+        if (installListeners!=null&&installListeners.size()>0){
+            IInstallListener listener = installListeners.get(packageName);
+            if (listener!=null)
+                listener.onUpDateProcess(p);
+        }
+    }
 }

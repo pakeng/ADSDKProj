@@ -30,29 +30,29 @@ import com.vito.utils.file.FileUtil;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-//import com.vito.ad.services.fixsysbugs.DownloadManager;
-
-/**
- * 用DownloadManager来实现版本更新
- *
- * @author Phoenix
- * @date 2016-8-24 14:06
- */
 public class DownloadService extends Service {
     private static final String TAG = DownloadService.class.getSimpleName();
     private ArrayList<DownloadTask> taskList = new ArrayList<>();
     public static final int HANDLE_DOWNLOAD = 0x001;
     public static final float UNBIND_SERVICE = 2.0F;
+
+    private Runnable progressRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateProgress();
+        }
+    };
+
+
     @SuppressLint("HandlerLeak")
     public static Handler downLoadHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             if (HANDLE_DOWNLOAD == msg.what) {
-                //被除数可以为0，除数必须大于0
-                if (msg.arg1 >= 0 && msg.arg2 > 0) {
-                }
+                AdManager.getInstance().updateDownloadProgress((String) msg.obj, msg.arg1);
             }
         }
     };
@@ -74,9 +74,6 @@ public class DownloadService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-//        downloadUrl = intent.getStringExtra(BUNDLE_KEY_DOWNLOAD_URL);
-//        Log.i(TAG, "Apk下载路径传递成功：" + downloadUrl);
-//        downloadApk(downloadUrl);
         return binder;
     }
 
@@ -146,6 +143,7 @@ public class DownloadService extends Service {
     private void unregisterContentObserver() {
         if (downloadObserver != null) {
             getContentResolver().unregisterContentObserver(downloadObserver);
+            close();
         }
     }
 
@@ -160,14 +158,33 @@ public class DownloadService extends Service {
 
 
     /**
+     * 更新进度
+     */
+    private void updateProgress() {
+        // 通过遍历 apkDownloadMap 获取需要监控的下载
+        for (int id : AdManager.getInstance().getApkDownloadMap().values()){
+            DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByADId(id);
+            if (downloadTask!=null&&!downloadTask.isDownloadCompleted()) {
+                int[] bytesAndStatus = getBytesAndStatus(downloadTask.getDownloadId());
+                // 防止除0 错误
+                bytesAndStatus[0] = bytesAndStatus[0]>0?bytesAndStatus[0]:1;
+                bytesAndStatus[1] = bytesAndStatus[1]>0?bytesAndStatus[1]:1000;
+                int p =  (bytesAndStatus[0]/bytesAndStatus[1])* 100;
+                String packageName = downloadTask.getPackageName();
+                downLoadHandler.sendMessage(downLoadHandler.obtainMessage(HANDLE_DOWNLOAD, p, 0, packageName));
+            }
+        }
+    }
+
+    /**
      * 通过query查询下载状态，包括已下载数据大小，总大小，下载状态
      *
-     * @param downloadId
+     * @param downloadId 下载id
      * @return
      */
     private int[] getBytesAndStatus(long downloadId) {
         int[] bytesAndStatus = new int[]{
-                -1, -1, 0
+                -1, -1
         };
         DownloadManager.Query query = new DownloadManager.Query().setFilterById(downloadId);
         Cursor cursor = null;
@@ -178,8 +195,6 @@ public class DownloadService extends Service {
                 bytesAndStatus[0] = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
                 //下载文件的总大小
                 bytesAndStatus[1] = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
-                //下载状态
-                bytesAndStatus[2] = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS));
             }
         } finally {
             if (cursor != null) {
@@ -189,14 +204,16 @@ public class DownloadService extends Service {
         return bytesAndStatus;
     }
 
+
+
     public void startTask() {
         ConcurrentHashSet<DownloadTask> Tasks = DownloadTaskManager.getInstance().getReadOnlyDownloadingTasks();
         if (downloadManager==null)
             downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
         if (downloadObserver==null)
             downloadObserver = new DownloadChangeObserver();
-        // TODO  make Observer work
-
+        // 注册下载监听
+        registerContentObserver();
         for (DownloadTask task : Tasks) {
             if (task.isDwonloading()||task.isDownloadCompleted()){
                 continue;
@@ -206,6 +223,28 @@ public class DownloadService extends Service {
             startNextTask();
         }
     }
+
+
+    //检查下载状态
+    private void checkStatus(long downloadId) {
+        DownloadManager.Query query = new DownloadManager.Query();
+        //通过下载的id查找
+        query.setFilterById(downloadId);
+        Cursor c = downloadManager.query(query);
+        if (c.moveToFirst()) {
+            int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
+            switch (status) {
+                //下载失败
+                case DownloadManager.STATUS_FAILED:
+                    AdManager.getInstance().notifyDownloadApkFailed(downloadId);
+                    break;
+                default:
+                    break;
+            }
+        }
+        c.close();
+    }
+
 
     /**
      * 接受下载完成广播
@@ -231,10 +270,10 @@ public class DownloadService extends Service {
                     isDownloading = false;
                     startNextTask();
                     break;
-
                 default:
                     break;
             }
+            checkStatus(downId);
         }
     }
 
@@ -283,6 +322,8 @@ public class DownloadService extends Service {
             callback.onDownloadEnd();
             callback.onInstallStart();
             APPUtil.installApkWithTask(AdManager.mContext, task);
+        }else if(task.getType()==Constants.APK_DOWNLOAD_URL){
+            APPUtil.installApkWithTask(AdManager.mContext, task);
         }else{
             AdManager.getInstance().refreshAllReadyADCount();
             AdManager.getInstance().notifyPrepare(true, task.getId());
@@ -295,7 +336,7 @@ public class DownloadService extends Service {
      */
     private class DownloadChangeObserver extends ContentObserver {
 
-        public DownloadChangeObserver() {
+        DownloadChangeObserver() {
             super(downLoadHandler);
             scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         }
@@ -303,11 +344,11 @@ public class DownloadService extends Service {
         /**
          * 当所监听的Uri发生改变时，就会回调此方法
          *
-         * @param selfChange 此值意义不大, 一般情况下该回调值false
+         * @param selfChange  一般情况下该回调值false
          */
         @Override
         public void onChange(boolean selfChange) {
-
+            scheduledExecutorService.scheduleAtFixedRate(progressRunnable, 0, 2, TimeUnit.SECONDS);
         }
     }
 

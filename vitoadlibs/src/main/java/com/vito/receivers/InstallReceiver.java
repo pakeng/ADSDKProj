@@ -6,6 +6,8 @@ import android.content.Intent;
 
 import com.vito.ad.base.task.ADTask;
 import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.configs.Constants;
+import com.vito.ad.managers.AdManager;
 import com.vito.ad.managers.AdTaskManager;
 import com.vito.ad.managers.DownloadTaskManager;
 import com.vito.ad.managers.ReceiverManager;
@@ -24,6 +26,11 @@ public class InstallReceiver extends BroadcastReceiver {
 				if (task!=null){
 					Log.e("adTest", "onReceive　needCheckPN = "+task.getPackageName() +"  packName = "+ packageName);
 					if (("package:"+task.getPackageName()).equalsIgnoreCase(packageName)){
+						if (task.getType() == Constants.APK_DOWNLOAD_URL){
+							AdManager.getInstance().notifyApkInstalled(packageName);
+							return;
+						}
+
 						ADTask adTask = AdTaskManager.getInstance().getAdTaskByADID(task.getOriginId());
 						//TODO  make more
 						if (adTask==null)
@@ -51,6 +58,7 @@ public class InstallReceiver extends BroadcastReceiver {
 //				}
 //			}
 		}else if (Intent.ACTION_PACKAGE_REMOVED.equals(intent.getAction())){
+			AdManager.getInstance().notifyApkUninstalled(packageName);
 //			for (int id : ReceiverManager.getInstance().getCheckInstallList()) {
 //				DownloadTask task = DownloadTaskManager.getInstance().getDownloadTaskByADId(id);
 //				if (task!=null){

@@ -358,8 +358,13 @@ public class OneWayProcessor extends IProcessor {
             param.put("language", "zh_CN");//语种
             param.put("timeZone", "GMT+08:00");//时区
             param.put("mac",paramsModel.getMac()); //mac 地址
-            param.put("networkOperator",paramsModel.getImsi().substring(0, 5));
-            param.put("simOperator",paramsModel.getImsi().substring(0, 5));
+            if (paramsModel.getImsi().length()>=5){
+                param.put("networkOperator",paramsModel.getImsi().substring(0, 5));
+                param.put("simOperator",paramsModel.getImsi().substring(0, 5));
+            }else{
+                param.put("networkOperator","null");
+                param.put("simOperator","null");
+            }
             param.put("imsi",paramsModel.getImsi());
 
 

@@ -1,5 +1,6 @@
 package com.vito.utils.network;
 
+import com.google.gson.Gson;
 import com.vito.utils.Log;
 import com.vito.utils.MD5Util;
 import com.vito.utils.StringUtil;
@@ -24,10 +25,40 @@ import okhttp3.Response;
 public class NetHelper {
     private static final Byte DEFAULT_TIME_OUT = 3;
     private static OkHttpClient client = new OkHttpClient();
+    private static String UA = "";
+
+//    Request request =
+//httpClient.newCall(request).enqueue(handler);
+
+    private static Request buildMyRequest(String url){
+        if (NetHelper.UA==null||NetHelper.UA.isEmpty()){
+            return new Request.Builder().url(url).build();
+        }
+        return new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
+            NetHelper.UA).build();
+    }
+
+    private static Request buildMyRequest(String url, RequestBody postbody){
+        if (NetHelper.UA==null||NetHelper.UA.isEmpty()){
+            return new Request
+                    .Builder()
+                    .post(postbody)
+                    .url(url)
+                    .build();
+        }
+        return new Request
+                .Builder()
+                .url(url)
+                .post(postbody)
+                .removeHeader("User-Agent")
+                .addHeader("User-Agent", NetHelper.UA)
+                .build();
+    }
 
 
     public static boolean doHttpCall(String url, int checkTimesOut) {
-        Request request = new Request.Builder().url(url).build();
+//        Request request = new Request.Builder().url(url).build();
+        Request request = buildMyRequest(url);
         try {
             Response response = client.newCall(request).execute();
             if (response.isSuccessful()) {
@@ -82,7 +113,8 @@ public class NetHelper {
 
     public static String doGetHttpResponse(String url, int checkTimesOut) {
         String result = "";
-        Request request = new Request.Builder().url(url).build();
+//        Request request = new Request.Builder().url(url).build();
+        Request request = buildMyRequest(url);
         try {
             Response response = client.newCall(request).execute();
             if (response.isSuccessful()) {
@@ -117,11 +149,12 @@ public class NetHelper {
             formBodyBuilder.add(key,value);
         }
         FormBody formBody = formBodyBuilder.build();
-        Request request = new Request
-                .Builder()
-                .post(formBody)
-                .url(url)
-                .build();
+//        Request request = new Request
+//                .Builder()
+//                .post(formBody)
+//                .url(url)
+//                .build();
+        Request request = buildMyRequest(url, formBody);
         try {
             Response response = client.newCall(request).execute();
             if (response.isSuccessful()){
@@ -148,11 +181,12 @@ public class NetHelper {
         MediaType mediaType = MediaType.parse("application/json");
         //创建RequestBody对象，将参数按照指定的MediaType封装
         RequestBody jsonBody = RequestBody.create(mediaType,json.toString());
-        Request request = new Request
-                .Builder()
-                .post(jsonBody)
-                .url(url)
-                .build();
+//        Request request = new Request
+//                .Builder()
+//                .post(jsonBody)
+//                .url(url)
+//                .build();
+        Request request = buildMyRequest(url, jsonBody);
         try {
             Response response = client.newCall(request).execute();
             if (response.isSuccessful()){
@@ -179,11 +213,12 @@ public class NetHelper {
         MediaType mediaType = MediaType.parse("application/json");
         //创建RequestBody对象，将参数按照指定的MediaType封装
         RequestBody jsonBody = RequestBody.create(mediaType, json);
-        Request request = new Request
-                .Builder()
-                .post(jsonBody)
-                .url(url)
-                .build();
+//        Request request = new Request
+//                .Builder()
+//                .post(jsonBody)
+//                .url(url)
+//                .build();
+        Request request = buildMyRequest(url, jsonBody);
         try {
             Response response = client.newCall(request).execute();
             if (response.isSuccessful()){
@@ -298,5 +333,71 @@ public class NetHelper {
             e.printStackTrace();
         }
         return  params;
+    }
+
+    public static String getIP(){
+        // http://pv.sohu.com/cityjson  通过访问网站获得ip返回
+        String url = "http://pv.sohu.com/cityjson";
+        String result = doGetHttpResponse(url,2);
+        android.util.Log.e("IP", "result = "+ result);
+        if (result.length()>0){
+            result = result.substring(result.indexOf("{"), result.lastIndexOf("}")+1);
+            Gson gson = new Gson();
+            try {
+                IPNode ipNode = gson.fromJson(result, IPNode.class);
+                return ipNode.getCip();
+            }catch (Exception e){
+                android.util.Log.e("IPERROR", "error = "+ e.toString());
+            }
+        }
+        return "";
+    }
+
+    private static String enCodeUserAgent(String userAgent) {
+
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0, length = userAgent.length(); i < length; i++) {
+            char c = userAgent.charAt(i);
+            if (c <= '\u001f' || c >= '\u007f') {
+                sb.append(String.format("\\u%04x", (int) c));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    public static void setUA(String UA) {
+        NetHelper.UA = enCodeUserAgent(UA);
+    }
+
+    class IPNode {
+        private String cip;
+        private String cid;
+        private String cname;
+
+        public String getCip() {
+            return cip;
+        }
+
+        public void setCip(String cip) {
+            this.cip = cip;
+        }
+
+        public String getCid() {
+            return cid;
+        }
+
+        public void setCid(String cid) {
+            this.cid = cid;
+        }
+
+        public String getCname() {
+            return cname;
+        }
+
+        public void setCname(String cname) {
+            this.cname = cname;
+        }
     }
 }

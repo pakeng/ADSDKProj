@@ -8,7 +8,9 @@ import android.view.View;
 import android.widget.Button;
 
 import com.vito.ad.base.task.ADTask;
+import com.vito.ad.base.task.DownloadTask;
 import com.vito.ad.managers.AdTaskManager;
+import com.vito.ad.managers.DownloadTaskManager;
 import com.vito.ad.managers.ViewManager;
 import com.vito.ad.views.ILandView;
 import com.vito.ad.views.webview.MyWebView;
@@ -27,6 +29,7 @@ public class LMLandView extends ILandView {
         coverView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                Log.e("ADTEST", "clidk coverView");
                 switch(event.getAction()){
                     case MotionEvent.ACTION_DOWN:
                         ViewManager.getInstance().getStart_point().x = (int) event.getX();
@@ -45,7 +48,12 @@ public class LMLandView extends ILandView {
         coverView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (adTask!=null&&adTask.getDownloadApkUrl()!=null&&adTask.getDownloadApkUrl().endsWith(".apk")){
+                    DownloadTask downloadTask = DownloadTaskManager.getInstance().buildDownloadTaskByADTask(adTask);
+                    DownloadTaskManager.getInstance().pushTask(downloadTask);
+                }
                 AdTaskManager.getInstance().getIAdBaseInterface(adTask).onClick();
+                onClose(adTask);
             }
         });
         Button cloaeBtn = coverLayout.findViewById(R.id.close_ad);

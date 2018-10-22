@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <ImageView
+        android:id="@+id/native_image_view"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <com.vito.ad.views.webview.MyWebView
+        android:visibility="gone"
+        android:id="@+id/native_content_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"/>
+    <RelativeLayout
+        android:id="@+id/native_cover_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <com.vito.ad.views.CountDownView
+            android:visibility="gone"
+            android:id="@+id/native_count_down_view"
+            app:ringColor="#80ff0000"
+            app:progressTextColor="#80CFCFCF"
+            app:ringWidth="10"
+            app:progressTextSize="10sp"
+            android:layout_margin="20dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
+
+        <Button
+            android:id="@+id/native_close_btn"
+            android:background="@drawable/btn_close_bg_corner"
+            android:text="X"
+            android:textColor="#fff"
+            android:layout_margin="20dp"
+            android:textSize="25sp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
+        <TextView
+            android:id="@+id/native_left_text"
+            android:layout_alignParentBottom="true"
+            android:text="广告"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <ImageView
+            android:id="@+id/native_left_img"
+            android:src="@drawable/btn"
+            android:visibility="gone"
+            android:layout_alignParentBottom="true"
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
+        <TextView
+            android:id="@+id/native_right_text"
+            android:text="ADHUB广告"
+            android:visibility="gone"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <ImageView
+            android:id="@+id/native_right_img"
+            android:src="@drawable/btn"
+            android:visibility="gone"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
+    </RelativeLayout>
+
+</FrameLayout>

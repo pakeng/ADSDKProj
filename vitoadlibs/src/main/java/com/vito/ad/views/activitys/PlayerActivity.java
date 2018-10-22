@@ -2,16 +2,21 @@ package com.vito.ad.views.activitys;
 
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 import com.vito.ad.base.task.ADTask;
 import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.channels.adhub.AdHubProcessor;
+import com.vito.ad.channels.vlion.VlionProcessor;
 import com.vito.ad.managers.AdManager;
 import com.vito.ad.managers.AdTaskManager;
 import com.vito.ad.managers.DownloadTaskManager;
@@ -30,6 +35,18 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
     private int playADid;
     private DownloadTask downLoadTask;
     private RelativeLayout landing_parentLayout;
+    Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+
+            if (msg.what==1001){
+                initNativeView();
+            }else if (msg.what == 1002){
+                AdTaskManager.getInstance().onClose(adTask);
+            }
+            super.handleMessage(msg);
+        }
+    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -38,15 +55,42 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
         if (getSupportActionBar()!=null)
             getSupportActionBar().hide();
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,  WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        setContentView(R.layout.player_view);
+
         AdTaskManager.getInstance().bindTargetAdActivity(this);
         prepareData();
-        initView();
-        initVideo();
+        if (playADid>-2){
+            AdManager.getInstance().setCurrentShowAdTaskId(playADid);
+            setContentView(R.layout.player_view);
+            initView();
+            initVideo();
+        }else{
+            // 使用Native 广告
+            setContentView(R.layout.native_ad_activity_layout);
+            prepareNativeData();
+        }
+    }
+
+    private void initNativeView() {
+        landing_parentLayout = findViewById(R.id.landing_page_layout);
+        View view = ViewManager.getInstance().buildLandingPageView(this, adTask);
+        if (view!=null){
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(new ViewGroup.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT));
+            landing_parentLayout.addView(view, layoutParams);
+        }
+    }
+
+    private void prepareNativeData(){
+        getNativeAdContent(0-playADid);
     }
 
     private void prepareData() {
         playADid = AdManager.getInstance().getOneAdId();
+        // TODO　
+        if (playADid < -1){
+            // 返回-2 使用native广告
+            return;
+        }
         if (playADid == -1){
             Log.e("get playADid == -1");
             AdTaskManager.getInstance().onClose(adTask);
@@ -101,7 +145,6 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
     private void initView() {
         video_layout = findViewById(R.id.video_layout);
         videoView = findViewById(R.id.video_player);
-        //String testuUrl = "http://cdn.oneway.mobi/cre/109/884a004bdd4e538c8219fd363e05b8c8.jpeg";
         View landingView = ViewManager.getInstance().buildLandingPageView(this, adTask);
         landing_parentLayout = findViewById(R.id.landing_page_layout);
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(new ViewGroup.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
@@ -119,7 +162,8 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
     @Override
     protected void onPause() {
         super.onPause();
-        videoView.pause();
+        if (videoView!=null)
+            videoView.pause();
     }
 
     @Override
@@ -130,12 +174,14 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
     @Override
     protected void onResume() {
         super.onResume();
-        videoView.start();
+        if (videoView!=null)
+            videoView.start();
     }
 
     @Override
     protected void onDestroy() {
-        videoView.suspend();
+        if (videoView!=null)
+            videoView.suspend();
         super.onDestroy();
     }
 
@@ -151,5 +197,47 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
         video_layout.setVisibility(View.INVISIBLE);
         landing_parentLayout.setVisibility(View.VISIBLE);
         return true;
+    }
+    private void getNativeAdContent(int type){
+        int i = AdManager.getInstance().getPriority().indexOf(type);
+        AdManager.getInstance().getPriority().remove(new Integer(type));
+        switch (type){
+            case 2:
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        AdHubProcessor adHubProcessor = new AdHubProcessor();
+                        adHubProcessor.startProcessor();
+                        adTask = adHubProcessor.getADTask();
+                        if (adTask==null){
+                            handler.sendEmptyMessage(1002);
+                            return;
+                        }
+                        AdManager.getInstance().setCurrentShowAdTaskId(adTask.getId());
+                        handler.sendEmptyMessage(1001);
+                    }
+                }).start();
+                break;
+            case 3:
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        VlionProcessor processor = new VlionProcessor();
+                        processor.startProcessor();
+                        adTask = processor.getADTask();
+                        if (adTask==null){
+                            handler.sendEmptyMessage(1002);
+                            return;
+                        }
+
+                        AdManager.getInstance().setCurrentShowAdTaskId(adTask.getId());
+                        handler.sendEmptyMessage(1001);
+
+                    }
+                }).start();
+                break;
+                default:
+                    break;
+        }
     }
 }

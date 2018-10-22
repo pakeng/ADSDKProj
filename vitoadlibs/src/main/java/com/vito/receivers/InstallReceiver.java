@@ -27,7 +27,7 @@ public class InstallReceiver extends BroadcastReceiver {
 					Log.e("adTest", "onReceive　needCheckPN = "+task.getPackageName() +"  packName = "+ packageName);
 					if (("package:"+task.getPackageName()).equalsIgnoreCase(packageName)){
 						if (task.getType() == Constants.APK_DOWNLOAD_URL){
-							AdManager.getInstance().notifyApkInstalled(packageName);
+							AdManager.getInstance().notifyApkInstalled(task.getPackageName(), task);
 							return;
 						}
 
@@ -58,7 +58,8 @@ public class InstallReceiver extends BroadcastReceiver {
 //				}
 //			}
 		}else if (Intent.ACTION_PACKAGE_REMOVED.equals(intent.getAction())){
-			AdManager.getInstance().notifyApkUninstalled(packageName);
+			// TODO 移除暂时不统计
+//			AdManager.getInstance().notifyApkUninstalled(packageName, );
 //			for (int id : ReceiverManager.getInstance().getCheckInstallList()) {
 //				DownloadTask task = DownloadTaskManager.getInstance().getDownloadTaskByADId(id);
 //				if (task!=null){

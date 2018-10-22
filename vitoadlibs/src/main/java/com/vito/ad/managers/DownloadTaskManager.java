@@ -16,6 +16,7 @@ import com.vito.ad.base.task.DownloadTask;
 import com.vito.ad.configs.Constants;
 import com.vito.ad.services.DownloadService;
 import com.vito.utils.Log;
+import com.vito.utils.MD5Util;
 import com.vito.utils.SharedPreferencesUtil;
 import com.vito.utils.gsonserializer.UriDeserializer;
 import com.vito.utils.gsonserializer.UriSerializer;
@@ -169,14 +170,27 @@ public class DownloadTaskManager {
             AdManager.mContext.unbindService(downloadServerConnect);
     }
 
-    public DownloadTask getDownloadTaskByADTask(ADTask mADTask) {
+    /**
+     *  创建下载任务
+     * @param mADTask 原始的广告任务
+     * @return 新创建的下载任务
+     */
+
+    public DownloadTask buildDownloadTaskByADTask(ADTask mADTask) {
         DownloadTask downloadTask = new DownloadTask();
         downloadTask.setType(Constants.APK_DOWNLOAD);
         downloadTask.setId(AdTaskManager.getInstance().getNextADID());
+        String packageName = "";
+        String name = "";
         downloadTask.setUrl(mADTask.getDownloadApkUrl());
-        downloadTask.setPackageName(DownloadTaskManager.getInstance().getDownloadTaskByADId(mADTask.getId()).getPackageName());
-        String name = DownloadTaskManager.getInstance().getDownloadTaskByADId(mADTask.getId()).getName();
-        name = name.substring(0, name.lastIndexOf(".")+1)+"apk";
+        if (DownloadTaskManager.getInstance().getDownloadTaskByADId(mADTask.getId())!=null) {
+            packageName = DownloadTaskManager.getInstance().getDownloadTaskByADId(mADTask.getId()).getPackageName();
+            name = DownloadTaskManager.getInstance().getDownloadTaskByADId(mADTask.getId()).getName();
+            name = name.substring(0, name.lastIndexOf(".")+1)+"apk";
+        }else {
+            name = MD5Util.encrypt(downloadTask.getUrl())+".apk";
+        }
+        downloadTask.setPackageName(packageName);
         downloadTask.setOriginId(mADTask.getId());
         downloadTask.setName(name);
         return downloadTask;

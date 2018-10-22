@@ -19,12 +19,14 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
--keep public class com.vito.ad.managers.AdManager { *; }
--keep public class com.vito.ad.channels.** { *; }
--keep public class com.vito.ad.base.entity.** { *; }
--keep public class com.vito.ad.base.task.** { *; }
--keep public class com.vito.ad.services.** { *; }
--keep public class com.vito.ad.views.activitys.** { *; }
--keep public class com.vito.ad.views.webview.** { *; }
--keep public class com.vito.utils.** { *; }
--keep public class com.vito.ad.base.interfaces.IPrepareCompleteCallBack { *; }
+#-keep public class com.vito.ad.managers.AdManager { *; }
+#-keep public class com.vito.ad.channels.** { *; }
+#-keep public class com.vito.ad.base.entity.** { *; }
+#-keep public class com.vito.ad.base.task.** { *; }
+#-keep public class com.vito.ad.services.** { *; }
+#-keep public class com.vito.ad.views.activitys.** { *; }
+#-keep public class com.vito.ad.views.webview.** { *; }
+#-keep public class com.vito.utils.** { *; }
+#-keep public class com.vito.ad.base.interfaces.IPrepareCompleteCallBack { *; }
+#-keep public class com.vito.ad.base.interfaces.IPullAppEventListenertener { *; }
+#-keep public class com.zhouwei.** { *; }

@@ -16,6 +16,7 @@ import com.vito.ad.managers.DownloadTaskManager;
 import com.vito.ad.managers.ViewManager;
 import com.vito.ad.views.video.interfaces.IVideoPlayListener;
 import com.vito.utils.Log;
+import com.vito.utils.MD5Util;
 import com.vito.utils.StringUtil;
 import com.vito.utils.network.NetHelper;
 
@@ -61,11 +62,13 @@ public class DZProcessor extends IProcessor {
         downloadTask.setVideoDetail(videoDetail);
         try {
             URI uri = new URI(downloadTask.getUrl());
-            String name = uri.getPath().substring(uri.getPath().lastIndexOf("/")+1);
+            String name =MD5Util.encrypt( downloadTask.getPackageName()+ downloadTask.getAppName())+
+                    uri.getPath().substring(uri.getPath().lastIndexOf("/")+1);
             downloadTask.setName(name);
         } catch (URISyntaxException e) {
             e.printStackTrace();
-            downloadTask.setName(Base64.encodeToString(dzAdContent.getApk_name().getBytes(),Base64.URL_SAFE));
+            downloadTask.setName(MD5Util.encrypt(Base64.encodeToString(dzAdContent.getApk_name().getBytes(),Base64.URL_SAFE)+downloadTask.getAppName()
+                    +downloadTask.getPackageName()));
         }
 
         AdTaskManager.getInstance().pushTask(adTask);

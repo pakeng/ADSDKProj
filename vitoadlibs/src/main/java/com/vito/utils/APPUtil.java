@@ -374,7 +374,8 @@ public class APPUtil {
     public static ApplicationInfo getAppInfoWithFilePath(Context ctx, String apkPath){
         PackageManager pm = ctx.getPackageManager();
         // TODO ERROR
-        PackageInfo pi = pm.getPackageArchiveInfo(apkPath, 0);
+
+        PackageInfo pi = pm.getPackageArchiveInfo(apkPath, PackageManager.GET_ACTIVITIES);
         if (pi==null)
             return null;
 

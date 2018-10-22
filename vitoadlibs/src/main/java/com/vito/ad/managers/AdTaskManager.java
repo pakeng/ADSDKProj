@@ -165,6 +165,48 @@ public class AdTaskManager {
     }
 
     public IAdBaseInterface getIAdBaseInterface(final ADTask adTask) {
+        if (adTask==null)
+            return new IAdBaseInterface() {
+                @Override
+                public void onShow() {
+
+                }
+
+                @Override
+                public void onClose() {
+
+                }
+
+                @Override
+                public void onDownLoadStart() {
+
+                }
+
+                @Override
+                public void onDownloadEnd() {
+
+                }
+
+                @Override
+                public void onDownloadError() {
+
+                }
+
+                @Override
+                public void onInstallStart() {
+
+                }
+
+                @Override
+                public void onInstallFinish() {
+
+                }
+
+                @Override
+                public void onClick() {
+
+                }
+            };
         IAdBaseInterface callback = iAdBaseInterfaceHashMap.get(adTask.getType());
         if (callback==null)
             return new IAdBaseInterface() {

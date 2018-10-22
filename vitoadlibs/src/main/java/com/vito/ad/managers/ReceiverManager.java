@@ -17,6 +17,7 @@ public class ReceiverManager {
     private static ReceiverManager instance = null;
     private InstallReceiver installBroadcast;
 //    private ArrayList<int> checkInstalllist = new ArrayList<>();
+    // TODO  may use set better
     private List<Integer> checkList = new ArrayList<>();
     private CheckInstallList checkInstallList = null;
     public static ReceiverManager getInstance(){

@@ -68,7 +68,7 @@ public class ImplLandView2 extends ILandView{
         smalDownloadBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByADTask(mADTask);
+                DownloadTask downloadTask = DownloadTaskManager.getInstance().buildDownloadTaskByADTask(mADTask);
                 DownloadTaskManager.getInstance().pushTask(downloadTask);
                 AdTaskManager.getInstance().getIAdBaseInterface(mADTask).onClick();
                 Log.e("ADTEST", "click small download");
@@ -82,7 +82,7 @@ public class ImplLandView2 extends ILandView{
                 DownloadTask currentDownloadTask = DownloadTaskManager.getInstance().getDownloadTaskByADId(mADTask.getId());
                 if (currentDownloadTask!=null)
                     currentDownloadTask.setApkDownload(true);
-                DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByADTask(mADTask);
+                DownloadTask downloadTask = DownloadTaskManager.getInstance().buildDownloadTaskByADTask(mADTask);
                 AdTaskManager.getInstance().getIAdBaseInterface(mADTask).onClick();
                 DownloadTaskManager.getInstance().pushTask(downloadTask);
                 Log.e("ADTEST", "click download");

@@ -15,6 +15,7 @@ import com.vito.ad.managers.ViewManager;
 import com.vito.ad.views.video.interfaces.IVideoPlayListener;
 import com.vito.utils.DeviceInfo;
 import com.vito.utils.Log;
+import com.vito.utils.MD5Util;
 import com.vito.utils.StringUtil;
 import com.vito.utils.network.NetHelper;
 
@@ -136,19 +137,19 @@ public class OneWayProcessor extends IProcessor {
         downloadTask.setId(adTask.getId());
         downloadTask.setUrl(oneWayAdContent.getVideoUrl());
         downloadTask.setAd_type(Config.ADTYPE);
+
+        downloadTask.setPackageName(oneWayAdContent.getAppStoreId());
+        downloadTask.setAppName(oneWayAdContent.getAppName());
+        downloadTask.setmAdname(oneWayAdContent.getAppName());
+        downloadTask.setVideoDetail(new VideoDetail(adTask.getId(), oneWayAdContent.getVideoDuration()));
         try {
             URI uri = new URI(downloadTask.getUrl());
-            String name = uri.getPath().substring(uri.getPath().lastIndexOf("/")+1);
+            String name = MD5Util.encrypt( downloadTask.getPackageName()+ downloadTask.getAppName())+uri.getPath().substring(uri.getPath().lastIndexOf("/")+1);
             downloadTask.setName(name);
         } catch (URISyntaxException e) {
             e.printStackTrace();
             downloadTask.setName(Base64.encodeToString(oneWayAdContent.getAppName().getBytes(),Base64.URL_SAFE));
         }
-        downloadTask.setPackageName(oneWayAdContent.getAppStoreId());
-        downloadTask.setAppName(oneWayAdContent.getAppName());
-        downloadTask.setmAdname(oneWayAdContent.getAppName());
-        downloadTask.setVideoDetail(new VideoDetail(adTask.getId(), oneWayAdContent.getVideoDuration()));
-
 
     }
 

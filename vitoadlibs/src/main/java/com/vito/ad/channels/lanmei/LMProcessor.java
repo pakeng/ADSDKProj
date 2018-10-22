@@ -75,6 +75,7 @@ public class LMProcessor extends IProcessor {
         adTask.setId(AdTaskManager.getInstance().getNextADID());
         adTask.setOrientation(0); // 使用默认值
         adTask.setLanding_Page(lmAdContent.getVideo_page()); //
+        adTask.setDownloadApkUrl(lmAdContent.getApk_download_url());
         adTask.setType(Config.ADTYPE);
 
         //处理回调
@@ -103,11 +104,12 @@ public class LMProcessor extends IProcessor {
         downloadTask.setVideoDetail(videoDetail);
         try {
             URI uri = new URI(downloadTask.getUrl());
-            String name = uri.getPath().substring(uri.getPath().lastIndexOf("/")+1);
+            String name = MD5Util.encrypt( downloadTask.getPackageName()+ downloadTask.getAppName())+uri.getPath().substring(uri.getPath().lastIndexOf("/")+1);
             downloadTask.setName(name);
         } catch (URISyntaxException e) {
             e.printStackTrace();
-            downloadTask.setName(Base64.encodeToString(lmAdContent.getApk_name().getBytes(),Base64.URL_SAFE));
+            downloadTask.setName(MD5Util.encrypt(Base64.encodeToString(lmAdContent.getApk_name().getBytes(),Base64.URL_SAFE)+
+                    downloadTask.getPackageName()+ downloadTask.getAppName()));
         }
 
         AdTaskManager.getInstance().pushTask(adTask);

@@ -119,7 +119,7 @@ public class JavaScriptBridge{
                 DownloadTask currentDownloadTask = DownloadTaskManager.getInstance().getDownloadTaskByADId(task.getId());
                 if (currentDownloadTask!=null)
                     currentDownloadTask.setApkDownload(true);
-                DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByADTask(task);
+                DownloadTask downloadTask = DownloadTaskManager.getInstance().buildDownloadTaskByADTask(task);
                 downloadTask.setUrl(ViewManager.getInstance().rebuildDownloadUrl(task, url));
                 DownloadTaskManager.getInstance().pushTask(downloadTask);
                 AdTaskManager.getInstance().onClose(task);

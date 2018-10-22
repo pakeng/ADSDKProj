@@ -12,9 +12,10 @@ import android.support.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.vito.ad.base.entity.ADServerResponse;
-import com.vito.ad.base.interfaces.IInstallListener;
 import com.vito.ad.base.interfaces.IPrepareCompleteCallBack;
+import com.vito.ad.base.interfaces.IPullAppEventListener;
 import com.vito.ad.base.interfaces.IShowCallBack;
+import com.vito.ad.base.interfaces.PullAppEventListenerFactory;
 import com.vito.ad.base.processor.IProcessor;
 import com.vito.ad.base.task.ADTask;
 import com.vito.ad.base.task.DownloadTask;
@@ -25,6 +26,7 @@ import com.vito.ad.configs.Constants;
 import com.vito.ad.utils.CallBackRequestUtil;
 import com.vito.ad.views.activitys.PlayerActivity;
 import com.vito.user.UserInfo;
+import com.vito.utils.APPUtil;
 import com.vito.utils.DeviceInfo;
 import com.vito.utils.Log;
 import com.vito.utils.SharedPreferencesUtil;
@@ -64,7 +66,8 @@ public class AdManager {
     private String mDeviceID;
     private String mChannel;
     private String subChannelStr;
-    private Map<String, IInstallListener> installListeners = new HashMap<>();
+    private boolean hasNativeAdFlag;
+    private Map<String, IPullAppEventListener> pullEventListeners = new HashMap<>();
 
     // 独立下载的配置数据
     private Map<String, Integer> apkDownloadMap;
@@ -146,6 +149,7 @@ public class AdManager {
 
     private String prepareAdInfo(){
         DeviceInfo deviceInfo = new DeviceInfo(mContext);
+        NetHelper.setUA(deviceInfo.getUA());
         mADDeviceInfo = deviceInfo.getADInfoString();
         return mADDeviceInfo;
     }
@@ -154,6 +158,10 @@ public class AdManager {
         if (getAllReadyADCount()>0&getOneAdId()!=-1){
             if (mPrepareCompleteCallback!=null)
                 mPrepareCompleteCallback.onReadyPlay(mAllReadyADCount);
+            return;
+        }else if (hasNativeAd()){
+            if (mPrepareCompleteCallback!=null)
+                mPrepareCompleteCallback.onReadyPlay(mAllReadyADCount+1);
             return;
         }
         getPriorityInfo(getPrepareTask());
@@ -167,6 +175,10 @@ public class AdManager {
                     Log.e("error prepareAD");
                     if (mPrepareCompleteCallback!=null){
                         mPrepareCompleteCallback.onFailed(-1, 0);
+                    }
+                }else{
+                    if (mPrepareCompleteCallback!=null){
+                        mPrepareCompleteCallback.onReadyPlay(mAllReadyADCount+1);
                     }
                 }
             }
@@ -186,7 +198,7 @@ public class AdManager {
                 count++;
             }
         }
-        return count>0;
+        return count>0||hasNativeAd();
     }
 
     private String buildGetUrl(String url, String paramStr, int id){
@@ -208,7 +220,8 @@ public class AdManager {
         DownloadTaskManager.getInstance().notifyUpDate();
         int count = getAllReadyADCount();
         if (mPrepareCompleteCallback!=null){
-            if (isSuccess)
+            // TODO 优化判断 2 是ADHub的Adtype 3是vlion
+            if (isSuccess||priority.contains(3)||priority.contains(2))
                 mPrepareCompleteCallback.onSuccess(id, count);
             else
                 mPrepareCompleteCallback.onFailed(id, count);
@@ -227,16 +240,29 @@ public class AdManager {
     }
 
     public boolean ShowAd(JSONObject params, int where){
-        if (params.has("token"))
+        if (params.has("token")) {
             showToken = params.optString("token");
-        if (params.has("uid"))
+            UserInfo.getInstance().setToken(showToken);
+        }
+        if (params.has("uid")) {
             mUid = params.optString("uid");
-        if (params.has("deviceid"))
+            UserInfo.getInstance().setUid(mUid);
+        }
+        if (params.has("deviceid")) {
             mDeviceID = params.optString("deviceid");
-        if (params.has("channel"))
+            UserInfo.getInstance().setDeviceId(mDeviceID);
+        }
+        if (params.has("channel")) {
             mChannel = params.optString("channel");
+            UserInfo.getInstance().setChannel(mChannel);
+        }
         currentWhere = where;
-        if (getAllReadyADCount()>0&&getAllReadyADCount()!=-1){
+        if ((getAllReadyADCount()>0)){
+            Intent m = new Intent();
+            m.setClass(mContext, PlayerActivity.class);
+            mContext.startActivity(m);
+            return true;
+        }else if (hasNativeAdFlag||priority.contains(3)||priority.contains(2)){
             Intent m = new Intent();
             m.setClass(mContext, PlayerActivity.class);
             mContext.startActivity(m);
@@ -252,6 +278,18 @@ public class AdManager {
                 return getOneAdIdWithTable(priority);
             }else
                 return getOneAdIdNOTable();
+        }else{
+            // 没有视频广告的时候 检查是否有原生广告可以使用
+            if(priority.size()>0){
+                return getOneAdIdWithTable(priority);
+            }
+//            else
+//                return getOneAdIdNOTable();
+//
+//            if (hasNativeAd()){
+//                return -2;
+//            }
+
         }
         return -1;
     }
@@ -283,6 +321,9 @@ public class AdManager {
     }
 
     public void onADClose(boolean status) {
+        if (priority.isEmpty()){
+            refreshPriorityInfo();
+        }
         if (showCallBack!=null&&status){
             showCallBack.onClose(currentWhere);
         }
@@ -295,15 +336,27 @@ public class AdManager {
             params.put("status", status?1:0);  // TODO
             params.put("channel", mChannel);
             params.put("device", mDeviceID);
-            params.put("is_down", downloadTask.isApkDownload()?1:0);
+
             params.put("where", currentWhere/1000);
             params.put("level", currentWhere%1000);
-            params.put("ad_type", downloadTask.getAD_Type());
-            params.put("app", downloadTask.getAppName()+" ");
-            params.put("ad", downloadTask.getADname()+" ");
-            params.put("ad_id", downloadTask.getSortNum()+"");
-            params.put("package", downloadTask.getPackageName());
-            params.put("price", downloadTask.getPrice());
+            if (downloadTask!=null){
+                params.put("ad_type", downloadTask.getAD_Type());
+                params.put("app", downloadTask.getAppName()+" ");
+                params.put("ad", downloadTask.getADname()+" ");
+                params.put("ad_id", downloadTask.getSortNum()+"");
+                params.put("package", downloadTask.getPackageName());
+                params.put("price", downloadTask.getPrice());
+                params.put("is_down", downloadTask.isApkDownload()?1:0);
+            }else {
+                params.put("ad_type", 3);
+                params.put("app", "");
+                params.put("ad", " ");
+                params.put("ad_id", "");
+                params.put("package", " ");
+                params.put("price", " ");
+                params.put("is_down", 0);
+            }
+
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -331,6 +384,9 @@ public class AdManager {
 
     private int getOneAdIdWithTable(List<Integer> priority_table) {
         for (int target : priority_table) {
+            if (target==2||target==3){
+                return 0-target;
+            }
             for (DownloadTask task : DownloadTaskManager.getInstance().getReadOnlyDownloadingTasks()) {
                 if (task.getType() == Constants.ADVIDEO && task.isDownloadCompleted()) {
                     ADTask adTask = AdTaskManager.getInstance().getAdTaskByADID(task.getId());
@@ -345,6 +401,7 @@ public class AdManager {
         }
         return -1;
     }
+
 
     private int getOneAdIdNOTable() {
         for (DownloadTask task : DownloadTaskManager.getInstance().getReadOnlyDownloadingTasks()) {
@@ -388,6 +445,31 @@ public class AdManager {
         ThreadExecutor.getInstance().addTask(task);
     }
 
+    private void refreshPriorityInfo(){
+        Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                JSONObject jsonObject;
+                try {
+                    jsonObject = new JSONObject(mADDeviceInfo);
+                    jsonObject.put("channel", subChannelStr);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    jsonObject = new JSONObject();
+                    Log.e("ADTEST", subChannelStr+ "make error");
+                }
+                String result = NetHelper.callWithResponse(Constants.getADSURL(), Constants.GET_AD_ORDER, jsonObject);
+                Gson gson = new Gson();
+                ADServerResponse response = gson.fromJson(result, ADServerResponse.class);
+                if (response!=null&&response.getRet()){
+                    priority = response.getData();
+                }
+                Log.e("ADTEST", result);
+            }
+        };
+        ThreadExecutor.getInstance().addTask(task);
+    }
+
     private void InitAnalysisConfigData(){
         ApplicationInfo appInfo = null;
         try {
@@ -405,45 +487,57 @@ public class AdManager {
         }
     }
 
-    public void setInstallListener(String packageName, IInstallListener listener){
-        this.installListeners.put(packageName, listener);
+    public void setInstallListener(String packageName, IPullAppEventListener listener){
+        this.pullEventListeners.put(packageName, listener);
     }
 
     public void notifyApkInstalled(String packageName, DownloadTask downloadTask) {
-        if (installListeners!=null&&installListeners.size()>0){
-              IInstallListener listener = installListeners.get(packageName);
-              if (listener!=null)
-                  listener.onInstallSuccess();
+        if (pullEventListeners !=null&& pullEventListeners.size()>0){
+              IPullAppEventListener listener = pullEventListeners.get(packageName);
+              if (listener!=null){
+                  listener.onInstallSuccess(downloadTask);
+              }
+              else{
+                  PullAppEventListenerFactory.getInstance().onInstallSuccess(downloadTask);
+              }
         }
 
         // 安装成功移除对应的任务记录
         apkDownloadMap.remove(downloadTask.getUrl());
-        DownloadTaskManager.getInstance().removeTaskByDownloadId(downloadTask.getDownloadId());
+//        DownloadTaskManager.getInstance().removeTaskByDownloadId(downloadTask.getDownloadId());
     }
 
-    public void notifyApkUninstalled(String packageName) {
-        if (installListeners!=null&&installListeners.size()>0){
-            IInstallListener listener = installListeners.get(packageName);
-            if (listener!=null)
-                listener.onUninstall();
+    public void notifyApkUninstalled(String packageName, int pullType) {
+        // TODO  not use
+//        if (pullEventListeners !=null&& pullEventListeners.size()>0){
+//            IPullAppEventListener listener = pullEventListeners.get(packageName);
+//            if (listener!=null)
+//                listener.onUninstall(pullType);
+//        }
+
+    }
+
+    public void startDownloadApkWithUrl(String url, String packageName, String appName, int pullType){
+
+        startDownloadApkWithUrl(url, packageName, appName, pullType, PullAppEventListenerFactory.getInstance());
+
+    }
+
+    public void startDownloadApkWithUrl(String url, String packageName, String appName,int pullType, IPullAppEventListener listener){
+        if (apkDownloadMap.get(url)!=null){
+            downloadSuccessToInstall(apkDownloadMap.get(url));
+            return;
         }
-    }
-
-    public void startDownloadApkWithUrl(String url, String packageName){
-        if (apkDownloadMap.get(url)!=null)
-            return;
+        pullEventListeners.put(packageName, listener);
         DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByURL(url, packageName);
+        downloadTask.setPullType(pullType);
+        downloadTask.setAppName(appName);
+        if (listener!=null){
+            listener.onDownloadStart(downloadTask);
+        }
         DownloadTaskManager.getInstance().pushTask(downloadTask);
         apkDownloadMap.put(url, downloadTask.getId());
-    }
-
-    public void startDownloadApkWithUrl(String url, String packageName, IInstallListener listener){
-        if (apkDownloadMap.get(url)!=null)
-            return;
-        installListeners.put(packageName, listener);
-        DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByURL(url, packageName);
-        DownloadTaskManager.getInstance().pushTask(downloadTask);
-        apkDownloadMap.put(url, downloadTask.getId());
+        saveApkDownloadMap();
     }
 
     /**
@@ -462,7 +556,7 @@ public class AdManager {
      * @param url like this: "odapp://com.odao.fish"
      * @return true 拉起成功， false 拉起失败
      */
-    public boolean pullAppWithUrl(String url, Bundle bundle){
+    public boolean pullAppWithUrl(String url,int pulltype, String packageName, String appName, Bundle bundle){
         PackageManager packageManager = mContext.getPackageManager();
         Intent mIntent = new Intent();
         if (bundle!=null)
@@ -471,6 +565,12 @@ public class AdManager {
         mIntent.setData(Uri.parse(url));
         List<ResolveInfo> activities = packageManager.queryIntentActivities(mIntent, 0);
         if (activities.size()>0){
+            IPullAppEventListener listener = pullEventListeners.get(packageName);
+            if (listener!=null){
+                listener.onPull(pulltype, packageName, appName);
+            }else{
+                PullAppEventListenerFactory.getInstance().onPull(pulltype, packageName, appName);
+            }
             mContext.startActivity(mIntent);
             return true;
         }else {
@@ -484,11 +584,12 @@ public class AdManager {
     public void notifyDownloadApkFailed(long downloadId) {
         DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByDownloadId(downloadId);
         if (downloadTask!=null){
-            IInstallListener listener = installListeners.get(downloadTask.getPackageName());
+            IPullAppEventListener listener = pullEventListeners.get(downloadTask.getPackageName());
             if (listener!=null){
-                listener.onDownloadFailed();
+                listener.onDownloadFailed(downloadTask);
             }
             apkDownloadMap.remove(downloadTask.getUrl());
+            saveApkDownloadMap();
             DownloadTaskManager.getInstance().removeTaskByDownloadId(downloadTask.getDownloadId());
         }
     }
@@ -503,10 +604,80 @@ public class AdManager {
      * @param p 进度 1-100;
      */
     public void updateDownloadProgress(String packageName, int p) {
-        if (installListeners!=null&&installListeners.size()>0){
-            IInstallListener listener = installListeners.get(packageName);
+        if (pullEventListeners !=null&& pullEventListeners.size()>0){
+            IPullAppEventListener listener = pullEventListeners.get(packageName);
             if (listener!=null)
                 listener.onUpDateProcess(p);
         }
     }
+
+    private void downloadSuccessToInstall(int id){
+        DownloadTask task = DownloadTaskManager.getInstance().getDownloadTaskByADId(id);
+        if (task!=null&&task.isDownloadCompleted()){
+            APPUtil.installApkWithTask(mContext, task);
+        }
+    }
+
+    private void saveApkDownloadMap(){
+        // 序列化
+        Gson gson = new Gson();
+        String json = gson.toJson(apkDownloadMap);
+        SharedPreferencesUtil.putStringValue(AdManager.mContext, Constants.APK_DOWNLOAD_MAP_CONFIG, "apk_download_map",json );
+    }
+
+    public Map<String, IPullAppEventListener> getPullEventListeners() {
+        return pullEventListeners;
+    }
+
+    public void setPullEventListeners(Map<String, IPullAppEventListener> pullEventListeners) {
+        this.pullEventListeners = pullEventListeners;
+    }
+
+    public void clickIcon(int pullType, String packageName, String appName){
+
+        IPullAppEventListener listener = pullEventListeners.get(packageName);
+        if (listener!=null){
+            listener.onClick(pullType, packageName, appName);
+        }else{
+            PullAppEventListenerFactory.getInstance().onClick(pullType, packageName, appName);
+        }
+
+    }
+
+    public void setUserInfo(JSONObject params){
+        if (params.has("uid")) {
+            mUid = params.optString("uid");
+            UserInfo.getInstance().setUid(mUid);
+        }
+        if (params.has("deviceid")) {
+            mDeviceID = params.optString("deviceid");
+            UserInfo.getInstance().setDeviceId(mDeviceID);
+        }
+        if (params.has("channel")) {
+            mChannel = params.optString("channel");
+            UserInfo.getInstance().setChannel(mChannel);
+        }
+    }
+
+    private boolean hasNativeAd(){
+        // TODO 优化判断条件
+        if (hasNativeAdFlag){
+            return true;
+        }
+        if (priority!=null&&(priority.contains(3)||priority.contains(2))){
+            hasNativeAdFlag = true;
+            return  true;
+        }
+        return false;
+    }
+
+    public void setCurrentShowAdTaskId(int showAdTaskId) {
+        this.currentShowAdTaskId = showAdTaskId;
+    }
+
+    public List<Integer> getPriority() {
+        return priority;
+    }
+
+
 }

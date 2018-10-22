@@ -16,6 +16,7 @@ import android.os.IBinder;
 import android.os.Message;
 
 import com.vito.ad.base.interfaces.IAdBaseInterface;
+import com.vito.ad.base.interfaces.IPullAppEventListener;
 import com.vito.ad.base.jdktool.ConcurrentHashSet;
 import com.vito.ad.base.task.ADTask;
 import com.vito.ad.base.task.DownloadTask;
@@ -62,7 +63,6 @@ public class DownloadService extends Service {
     private DownloadChangeObserver downloadObserver;
     private BroadcastReceiver downLoadBroadcast;
     private ScheduledExecutorService scheduledExecutorService;
-    private boolean isDownloading = false;
 
 
     @Override
@@ -213,7 +213,7 @@ public class DownloadService extends Service {
         if (downloadObserver==null)
             downloadObserver = new DownloadChangeObserver();
         // 注册下载监听
-        registerContentObserver();
+        // registerContentObserver();
         for (DownloadTask task : Tasks) {
             if (task.isDwonloading()||task.isDownloadCompleted()){
                 continue;
@@ -267,7 +267,6 @@ public class DownloadService extends Service {
                             }
                         }
                     }
-                    isDownloading = false;
                     startNextTask();
                     break;
                 default:
@@ -278,9 +277,6 @@ public class DownloadService extends Service {
     }
 
     private void startNextTask() {
-        if (isDownloading)
-            return;
-
         if (taskList!=null&&!taskList.isEmpty()){
             DownloadTask task = taskList.get(0);
 
@@ -296,7 +292,6 @@ public class DownloadService extends Service {
                 return;
             }
 
-            isDownloading = true;
             if (task.getType() == Constants.ADVIDEO){
                 downloadVideo(task);
             }else {
@@ -306,8 +301,6 @@ public class DownloadService extends Service {
                 downloadApk(task);
             }
             taskList.remove(task);
-        }else{
-            isDownloading = false;
         }
     }
 
@@ -323,6 +316,11 @@ public class DownloadService extends Service {
             callback.onInstallStart();
             APPUtil.installApkWithTask(AdManager.mContext, task);
         }else if(task.getType()==Constants.APK_DOWNLOAD_URL){
+            IPullAppEventListener callback = AdManager.getInstance().getPullEventListeners().get(task.getPackageName());
+            if (callback!=null){
+                callback.onDownloadSuccess(task);
+                callback.onInstallStart(task);
+            }
             APPUtil.installApkWithTask(AdManager.mContext, task);
         }else{
             AdManager.getInstance().refreshAllReadyADCount();

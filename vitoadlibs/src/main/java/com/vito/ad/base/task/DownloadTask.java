@@ -24,6 +24,7 @@ public class DownloadTask implements Serializable {
     private String price = "";
     private String appName;
     private int sortNum;
+    private int pullType = -1; // 拉起类型
 
     public boolean isApkDownload() {
         return isApkDownload;
@@ -190,5 +191,13 @@ public class DownloadTask implements Serializable {
 
     public void setAd_type(int ad_type) {
         this.ad_type = ad_type;
+    }
+
+    public int getPullType() {
+        return pullType;
+    }
+
+    public void setPullType(int pullType) {
+        this.pullType = pullType;
     }
 }

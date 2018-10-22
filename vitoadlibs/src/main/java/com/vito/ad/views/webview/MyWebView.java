@@ -116,7 +116,8 @@ public class MyWebView extends WebView {
             webSetting.setMediaPlaybackRequiresUserGesture(false);
         }
         setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY); // 设置无边框
-//		settings.setLayoutAlgorithm(LayoutAlgorithm.SINGLE_COLUMN); // web内容强制满屏
+		webSetting.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
+// web内容强制满屏
         setHorizontalScrollBarEnabled(false);
         setVerticalScrollBarEnabled(false);
         setScrollContainer(false);

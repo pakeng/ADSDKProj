@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
@@ -377,7 +378,18 @@ public class DeviceInfo {
         }
     }
 
+    /**
+     * 判断当前设备是手机还是平板，代码来自 Google I/O App for Android
+     * @return 平板返回 True，手机返回 False
+     */
+    public boolean isPad() {
+        return (m_pContext.getResources().getConfiguration().screenLayout
+                & Configuration.SCREENLAYOUT_SIZE_MASK)
+                >= Configuration.SCREENLAYOUT_SIZE_LARGE;
+    }
+
     public static String getLocalIpAddress() {
+
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
                 NetworkInterface intf = en.nextElement();

@@ -6,7 +6,7 @@ import com.vito.ad.base.entity.VideoDetail;
 
 import java.io.Serializable;
 
-public class DownloadTask implements Serializable {
+public class ADDownloadTask implements Serializable {
     private int type = 0; // 下载类型
     private int id = 0; // id 用来查广告
     private int originId = 0; // 原始id  当派生出apk 下载task的时候应当设置该id

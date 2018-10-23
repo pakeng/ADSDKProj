@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import java.io.Serializable;
 import java.util.HashSet;
 
-public class ADTask implements Serializable {
+public class ADInfoTask implements Serializable {
     private int orientation = 0;
     private boolean isRemoveOnClose = false;
     private boolean isRemove;

@@ -3,8 +3,8 @@ package com.vito.ad.channels.adhub;
 import com.google.gson.Gson;
 import com.vito.ad.base.interfaces.ListenerFactory;
 import com.vito.ad.base.processor.IProcessor;
-import com.vito.ad.base.task.ADTask;
-import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.base.task.ADDownloadTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.channels.adhub.request.AdHubRequestEnity;
 import com.vito.ad.channels.adhub.request.AdReqInfo;
 import com.vito.ad.channels.adhub.request.DevInfo;
@@ -28,8 +28,8 @@ import java.util.HashSet;
 
 public class AdHubProcessor extends IProcessor {
     private AdHubResponseEnity AdhubContent = null;
-    private ADTask adTask;
-    private DownloadTask downloadTask;
+    private ADInfoTask adInfoTask;
+    private ADDownloadTask ADDownloadTask;
 
 
     @Override
@@ -37,13 +37,13 @@ public class AdHubProcessor extends IProcessor {
         if (AdhubContent ==null)
             return;
         // 生成ADTask
-        adTask = new ADTask();
+        adInfoTask = new ADInfoTask();
         Gson gson = new Gson();
         String adObjectStr = gson.toJson(AdhubContent);
-        adTask.setADObject(adObjectStr);
-        adTask.setId(AdTaskManager.getInstance().getNextADID());
+        adInfoTask.setADObject(adObjectStr);
+        adInfoTask.setId(AdTaskManager.getInstance().getNextADID());
 
-        adTask.setType(Config.ADTYPE);
+        adInfoTask.setType(Config.ADTYPE);
 
         //处理回调
 
@@ -79,12 +79,12 @@ public class AdHubProcessor extends IProcessor {
                 converturl.add(t.getConvertUrl());
         }
 
-        adTask.setClickCallBackUrls(clickurl);
-        adTask.setShowCallBackUrls(viewurl);
+        adInfoTask.setClickCallBackUrls(clickurl);
+        adInfoTask.setShowCallBackUrls(viewurl);
 
-        AdTaskManager.getInstance().pushTask(adTask);
+        AdTaskManager.getInstance().pushTask(adInfoTask);
         // 生成DownloadTask
-        downloadTask = new DownloadTask();
+        ADDownloadTask = new ADDownloadTask();
 
 
     }
@@ -171,13 +171,13 @@ public class AdHubProcessor extends IProcessor {
     }
 
     @Override
-    public ADTask getADTask() {
-        return adTask;
+    public ADInfoTask getADTask() {
+        return adInfoTask;
     }
 
     @Override
-    public DownloadTask getDownLoadTask() {
-        return downloadTask;
+    public ADDownloadTask getDownLoadTask() {
+        return ADDownloadTask;
     }
 
     @Override

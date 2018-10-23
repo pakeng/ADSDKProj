@@ -9,7 +9,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.vito.ad.base.interfaces.IAdBaseInterface;
 import com.vito.ad.base.jdktool.ConcurrentHashSet;
-import com.vito.ad.base.task.ADTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.configs.Constants;
 import com.vito.ad.views.video.interfaces.IVideoPlayListener;
 import com.vito.utils.SharedPreferencesUtil;
@@ -30,19 +30,19 @@ public class AdTaskManager {
     private Activity targetAdActivity = null; // 广告sdk的载体
     private AdTaskManager(){ Init();}
 
-    public ConcurrentHashSet<ADTask> getReadOnlyAdTasks() {
-        return adTasks;
+    public ConcurrentHashSet<ADInfoTask> getReadOnlyAdTasks() {
+        return adInfoTasks;
     }
 
-    public ConcurrentHashSet<ADTask> pushTask(ADTask task){
+    public ConcurrentHashSet<ADInfoTask> pushTask(ADInfoTask task){
         if (task!=null) {
             synchronized (this){
-                adTasks.add(task);
+                adInfoTasks.add(task);
                 upDateSaveFile();
             }
 
         }
-        return adTasks;
+        return adInfoTasks;
     }
 
     // 更新保存的任务文件
@@ -51,16 +51,16 @@ public class AdTaskManager {
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(Uri.class, new UriSerializer())
                 .create();
-        String json = gson.toJson(adTasks);
+        String json = gson.toJson(adInfoTasks);
         SharedPreferencesUtil.putStringValue(AdManager.mContext, Constants.AD_CONFIG_FILE_NAME, "adtasks",json );
         SharedPreferencesUtil.putIntValue(AdManager.mContext, Constants.AD_CONFIG_FILE_NAME, "currentadid", currentADID);
     }
 
-    public void setAdTasks(ConcurrentHashSet<ADTask> adTasks) {
-        this.adTasks = adTasks;
+    public void setAdInfoTasks(ConcurrentHashSet<ADInfoTask> adInfoTasks) {
+        this.adInfoTasks = adInfoTasks;
     }
 
-    private ConcurrentHashSet<ADTask> adTasks = new ConcurrentHashSet<ADTask>();
+    private ConcurrentHashSet<ADInfoTask> adInfoTasks = new ConcurrentHashSet<ADInfoTask>();
     public static AdTaskManager getInstance(){
         if (instance==null){
             synchronized (AdTaskManager.class){
@@ -94,26 +94,26 @@ public class AdTaskManager {
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(Uri.class, new UriDeserializer())
                 .create();
-        Type type = new TypeToken<ConcurrentHashSet<ADTask>>(){}.getType();
-        ConcurrentHashSet<ADTask> tasks = gson.fromJson(adtasks_json, type);
+        Type type = new TypeToken<ConcurrentHashSet<ADInfoTask>>(){}.getType();
+        ConcurrentHashSet<ADInfoTask> tasks = gson.fromJson(adtasks_json, type);
         if (tasks!=null){
             // 移除无效的
-            Iterator<ADTask> it = tasks.iterator();
+            Iterator<ADInfoTask> it = tasks.iterator();
             for(int i=0; i<tasks.size(); i++){
-                ADTask task = it.next();
+                ADInfoTask task = it.next();
                 if (task.isRemove()){
                     it.remove();
                     i--;
                 }
             }
-            adTasks = tasks;
+            adInfoTasks = tasks;
         }
         currentADID = SharedPreferencesUtil.getIntValue(AdManager.mContext, Constants.AD_CONFIG_FILE_NAME, "currentadid");
     }
 
 
-    public ADTask getAdTaskByADID(int adid) {
-        for (ADTask task : adTasks) {
+    public ADInfoTask getAdTaskByADID(int adid) {
+        for (ADInfoTask task : adInfoTasks) {
             if (task.getId() == adid){
                 return task;
             }
@@ -121,34 +121,34 @@ public class AdTaskManager {
         return null;
     }
 
-    public IVideoPlayListener getVideoPlayerListener(final ADTask adTask) {
-       return iVideoPlayListenerHashMap.get(adTask.getType());
+    public IVideoPlayListener getVideoPlayerListener(final ADInfoTask adInfoTask) {
+       return iVideoPlayListenerHashMap.get(adInfoTask.getType());
     }
 
-    public void onShowCallBack(ADTask adTask) {
-        if (getIAdBaseInterface(adTask)!=null)
-            getIAdBaseInterface(adTask).onShow();
+    public void onShowCallBack(ADInfoTask adInfoTask) {
+        if (getIAdBaseInterface(adInfoTask)!=null)
+            getIAdBaseInterface(adInfoTask).onShow();
     }
 
-    public void onClose(ADTask adTask){
-        if (getIAdBaseInterface(adTask)!=null)
-            getIAdBaseInterface(adTask).onClose();
+    public void onClose(ADInfoTask adInfoTask){
+        if (getIAdBaseInterface(adInfoTask)!=null)
+            getIAdBaseInterface(adInfoTask).onClose();
         if (targetAdActivity!=null){
             targetAdActivity.finish();
             targetAdActivity = null;
         }
-        if (adTask!=null){
+        if (adInfoTask !=null){
             AdManager.getInstance().onADClose(true); // 不为空就返回下发道具
-            removeTask(adTask);
+            removeTask(adInfoTask);
         }else {
             AdManager.getInstance().onADClose(false);
         }
 
     }
 
-    private void removeTask(ADTask adTask) {
-        if (adTask.isRemoveOnClose()){
-            adTask.setRemove(true);
+    private void removeTask(ADInfoTask adInfoTask) {
+        if (adInfoTask.isRemoveOnClose()){
+            adInfoTask.setRemove(true);
             upDateSaveFile();
             // 刷新广告数量
             AdManager.getInstance().PrepareAD();
@@ -164,8 +164,8 @@ public class AdTaskManager {
         this.iAdBaseInterfaceHashMap.put(adType, listener);
     }
 
-    public IAdBaseInterface getIAdBaseInterface(final ADTask adTask) {
-        if (adTask==null)
+    public IAdBaseInterface getIAdBaseInterface(final ADInfoTask adInfoTask) {
+        if (adInfoTask ==null)
             return new IAdBaseInterface() {
                 @Override
                 public void onShow() {
@@ -207,7 +207,7 @@ public class AdTaskManager {
 
                 }
             };
-        IAdBaseInterface callback = iAdBaseInterfaceHashMap.get(adTask.getType());
+        IAdBaseInterface callback = iAdBaseInterfaceHashMap.get(adInfoTask.getType());
         if (callback==null)
             return new IAdBaseInterface() {
                 @Override

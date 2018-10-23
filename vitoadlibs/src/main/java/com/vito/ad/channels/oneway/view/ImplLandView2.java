@@ -13,11 +13,11 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-import com.vito.ad.base.task.ADTask;
-import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.base.task.ADDownloadTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.channels.oneway.OneWayAdContent;
 import com.vito.ad.managers.AdTaskManager;
-import com.vito.ad.managers.DownloadTaskManager;
+import com.vito.ad.managers.ADDownloadTaskManager;
 import com.vito.ad.views.ILandView;
 import com.vito.utils.Log;
 import com.zhouwei.mzbanner.MZBannerView;
@@ -36,8 +36,8 @@ public class ImplLandView2 extends ILandView{
     private ImageView landPagebg;
     private BlurTransformation blurTransformation = new BlurTransformation( 14, 3);
     @Override
-    public void buildLandView(final Context context, final ADTask mADTask) {
-        OneWayAdContent oneWayAdContent = mADTask.getADObject(OneWayAdContent.class);
+    public void buildLandView(final Context context, final ADInfoTask mADInfoTask) {
+        OneWayAdContent oneWayAdContent = mADInfoTask.getADObject(OneWayAdContent.class);
         final List<String> imageUrl = oneWayAdContent.getImgUrls();
         LayoutInflater inflater = LayoutInflater.from(context);
         LinearLayout page_layout = (LinearLayout) inflater.inflate(R.layout.landing_page2, null, false);
@@ -61,32 +61,32 @@ public class ImplLandView2 extends ILandView{
             @Override
             public void onClick(View v) {
                 Log.e("ADTEST", "click close");
-                onClose(mADTask);
+                onClose(mADInfoTask);
             }
         });
         Button smalDownloadBtn = coverLayout.findViewById(R.id.small_download);
         smalDownloadBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DownloadTask downloadTask = DownloadTaskManager.getInstance().buildDownloadTaskByADTask(mADTask);
-                DownloadTaskManager.getInstance().pushTask(downloadTask);
-                AdTaskManager.getInstance().getIAdBaseInterface(mADTask).onClick();
+                ADDownloadTask ADDownloadTask = ADDownloadTaskManager.getInstance().buildDownloadTaskByADTask(mADInfoTask);
+                ADDownloadTaskManager.getInstance().pushTask(ADDownloadTask);
+                AdTaskManager.getInstance().getIAdBaseInterface(mADInfoTask).onClick();
                 Log.e("ADTEST", "click small download");
-                onClose(mADTask);
+                onClose(mADInfoTask);
             }
         });
         Button downloadBtn = coverLayout.findViewById(R.id.download);
         downloadBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DownloadTask currentDownloadTask = DownloadTaskManager.getInstance().getDownloadTaskByADId(mADTask.getId());
-                if (currentDownloadTask!=null)
-                    currentDownloadTask.setApkDownload(true);
-                DownloadTask downloadTask = DownloadTaskManager.getInstance().buildDownloadTaskByADTask(mADTask);
-                AdTaskManager.getInstance().getIAdBaseInterface(mADTask).onClick();
-                DownloadTaskManager.getInstance().pushTask(downloadTask);
+                ADDownloadTask currentADDownloadTask = ADDownloadTaskManager.getInstance().getDownloadTaskByADId(mADInfoTask.getId());
+                if (currentADDownloadTask !=null)
+                    currentADDownloadTask.setApkDownload(true);
+                ADDownloadTask ADDownloadTask = ADDownloadTaskManager.getInstance().buildDownloadTaskByADTask(mADInfoTask);
+                AdTaskManager.getInstance().getIAdBaseInterface(mADInfoTask).onClick();
+                ADDownloadTaskManager.getInstance().pushTask(ADDownloadTask);
                 Log.e("ADTEST", "click download");
-                onClose(mADTask);
+                onClose(mADInfoTask);
             }
         });
         TextView appname = coverLayout.findViewById(R.id.ad_appName);
@@ -151,11 +151,11 @@ public class ImplLandView2 extends ILandView{
     }
 
     @Override
-    public void onClose(ADTask adTask) {
+    public void onClose(ADInfoTask adInfoTask) {
         if (mMZBanner!=null) {
             mMZBanner.pause();
             mMZBanner = null;
         }
-        super.onClose(adTask);
+        super.onClose(adInfoTask);
     }
 }

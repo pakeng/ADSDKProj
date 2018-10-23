@@ -1,12 +1,12 @@
 package com.vito.ad.base.processor;
 
+import com.vito.ad.base.task.ADDownloadTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.utils.Log;
 
 import com.google.gson.Gson;
 import com.vito.ad.managers.AdManager;
 import com.vito.ad.base.entity.EquipmentParamsModel;
-import com.vito.ad.base.task.ADTask;
-import com.vito.ad.base.task.DownloadTask;
 import com.vito.utils.network.NetHelper;
 
 import java.net.MalformedURLException;
@@ -41,10 +41,10 @@ public abstract class IProcessor {
     public abstract String buildRequestInfo();
 
     // 获取AdTask
-    public abstract ADTask getADTask();
+    public abstract ADInfoTask getADTask();
 
     // 获取AdTask
-    public abstract DownloadTask getDownLoadTask();
+    public abstract ADDownloadTask getDownLoadTask();
 
     protected abstract String buildLandingPage(String originUrl) ;
     // 构造请求url

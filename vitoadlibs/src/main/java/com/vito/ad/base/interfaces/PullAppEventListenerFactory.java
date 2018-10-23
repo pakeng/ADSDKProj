@@ -1,6 +1,6 @@
 package com.vito.ad.base.interfaces;
 
-import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.base.task.ADDownloadTask;
 import com.vito.ad.configs.Constants;
 import com.vito.user.UserInfo;
 import com.vito.utils.network.NetHelper;
@@ -47,32 +47,32 @@ class DefaultImpl implements IPullAppEventListener{
     }
 
     @Override
-    public void onDownloadStart(DownloadTask downloadTask) {
-        makeCallBackWithState(1, downloadTask);
+    public void onDownloadStart(ADDownloadTask ADDownloadTask) {
+        makeCallBackWithState(1, ADDownloadTask);
     }
 
     @Override
-    public void onDownloadSuccess(DownloadTask downloadTask) {
-        makeCallBackWithState(2, downloadTask);
+    public void onDownloadSuccess(ADDownloadTask ADDownloadTask) {
+        makeCallBackWithState(2, ADDownloadTask);
     }
 
     @Override
-    public void onInstallStart(DownloadTask downloadTask) {
-        makeCallBackWithState(3, downloadTask);
+    public void onInstallStart(ADDownloadTask ADDownloadTask) {
+        makeCallBackWithState(3, ADDownloadTask);
     }
 
     @Override
-    public void onInstallSuccess(DownloadTask downloadTask) {
-        makeCallBackWithState(4, downloadTask);
+    public void onInstallSuccess(ADDownloadTask ADDownloadTask) {
+        makeCallBackWithState(4, ADDownloadTask);
     }
 
     @Override
-    public void onUninstall(DownloadTask downloadTask) {
+    public void onUninstall(ADDownloadTask ADDownloadTask) {
 
     }
 
     @Override
-    public void onDownloadFailed(DownloadTask downloadTask) {
+    public void onDownloadFailed(ADDownloadTask ADDownloadTask) {
 
     }
 
@@ -102,16 +102,16 @@ class DefaultImpl implements IPullAppEventListener{
         }
     }
 
-    private void makeCallBackWithState(int state, DownloadTask downloadTask){
+    private void makeCallBackWithState(int state, ADDownloadTask ADDownloadTask){
         JSONObject params = new JSONObject();
         try {
             params.put("uid", UserInfo.getInstance().getUid());
             params.put("status", state);
             params.put("channel", UserInfo.getInstance().getChannel());
             params.put("device", UserInfo.getInstance().getDeviceId());
-            params.put("type", downloadTask.getPullType());
-            params.put("app", downloadTask.getAppName());
-            params.put("package", downloadTask.getPackageName());
+            params.put("type", ADDownloadTask.getPullType());
+            params.put("app", ADDownloadTask.getAppName());
+            params.put("package", ADDownloadTask.getPackageName());
 
         } catch (JSONException e) {
             e.printStackTrace();

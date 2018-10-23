@@ -13,13 +13,13 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
-import com.vito.ad.base.task.ADTask;
-import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.base.task.ADDownloadTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.channels.adhub.AdHubProcessor;
 import com.vito.ad.channels.vlion.VlionProcessor;
+import com.vito.ad.managers.ADDownloadTaskManager;
 import com.vito.ad.managers.AdManager;
 import com.vito.ad.managers.AdTaskManager;
-import com.vito.ad.managers.DownloadTaskManager;
 import com.vito.ad.managers.ViewManager;
 import com.vito.ad.views.video.MyVideo;
 import com.vito.ad.views.video.interfaces.IVideoplayInfo;
@@ -31,9 +31,9 @@ import vito.com.vitoadlibs.R;
 public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.OnErrorListener {
     private MyVideo videoView;
     private View video_layout;
-    private ADTask adTask;
+    private ADInfoTask adInfoTask;
     private int playADid;
-    private DownloadTask downLoadTask;
+    private ADDownloadTask downLoadTaskAD;
     private RelativeLayout landing_parentLayout;
     Handler handler = new Handler(){
         @Override
@@ -42,7 +42,7 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
             if (msg.what==1001){
                 initNativeView();
             }else if (msg.what == 1002){
-                AdTaskManager.getInstance().onClose(adTask);
+                AdTaskManager.getInstance().onClose(adInfoTask);
             }
             super.handleMessage(msg);
         }
@@ -72,7 +72,7 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
 
     private void initNativeView() {
         landing_parentLayout = findViewById(R.id.landing_page_layout);
-        View view = ViewManager.getInstance().buildLandingPageView(this, adTask);
+        View view = ViewManager.getInstance().buildLandingPageView(this, adInfoTask);
         if (view!=null){
             FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(new ViewGroup.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
                     FrameLayout.LayoutParams.MATCH_PARENT));
@@ -93,24 +93,24 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
         }
         if (playADid == -1){
             Log.e("get playADid == -1");
-            AdTaskManager.getInstance().onClose(adTask);
+            AdTaskManager.getInstance().onClose(adInfoTask);
         }
-        downLoadTask = DownloadTaskManager.getInstance().getDownloadTaskByADId(playADid);
-        if (downLoadTask == null){
-            DownloadTaskManager.getInstance().removeTaskByADId(playADid);
+        downLoadTaskAD = ADDownloadTaskManager.getInstance().getDownloadTaskByADId(playADid);
+        if (downLoadTaskAD == null){
+            ADDownloadTaskManager.getInstance().removeTaskByADId(playADid);
             Log.e("download task = null");
             prepareData();
         }
-        if (downLoadTask!=null&&downLoadTask.getVideoDetail()!=null)
-            downLoadTask.getVideoDetail().playTime++;
-        adTask = AdTaskManager.getInstance().getAdTaskByADID(playADid);
-        if (adTask == null) {
+        if (downLoadTaskAD !=null&& downLoadTaskAD.getVideoDetail()!=null)
+            downLoadTaskAD.getVideoDetail().playTime++;
+        adInfoTask = AdTaskManager.getInstance().getAdTaskByADID(playADid);
+        if (adInfoTask == null) {
             Log.e("ad task = null");
-            DownloadTaskManager.getInstance().removeTaskByADId(playADid);
+            ADDownloadTaskManager.getInstance().removeTaskByADId(playADid);
             prepareData();
         }
-        if (downLoadTask.getVideoDetail()!=null&&downLoadTask.getVideoDetail().playTime>=1) // 播放3次之后就设置本次播放完之后移除这个广告
-            adTask.setRemoveOnClose(true);
+        if (downLoadTaskAD.getVideoDetail()!=null&& downLoadTaskAD.getVideoDetail().playTime>=1) // 播放3次之后就设置本次播放完之后移除这个广告
+            adInfoTask.setRemoveOnClose(true);
     }
 
     private void initVideo() {
@@ -126,8 +126,8 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
 
         videoView.setOnErrorListener(this);
 
-        videoView.setScreenOrientation(this, adTask.getOrientation(), video_layout);
-        videoView.setVideoURI(downLoadTask.getStoreUri());
+        videoView.setScreenOrientation(this, adInfoTask.getOrientation(), video_layout);
+        videoView.setVideoURI(downLoadTaskAD.getStoreUri());
         videoView.setiVideoplayInfo(new IVideoplayInfo() {
             @Override
             public void updateSecond(int seconds) {
@@ -138,14 +138,14 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
 
             }
         });
-        videoView.setiVideoPlayListener(AdTaskManager.getInstance().getVideoPlayerListener(adTask));
+        videoView.setiVideoPlayListener(AdTaskManager.getInstance().getVideoPlayerListener(adInfoTask));
         videoView.start();
     }
 
     private void initView() {
         video_layout = findViewById(R.id.video_layout);
         videoView = findViewById(R.id.video_player);
-        View landingView = ViewManager.getInstance().buildLandingPageView(this, adTask);
+        View landingView = ViewManager.getInstance().buildLandingPageView(this, adInfoTask);
         landing_parentLayout = findViewById(R.id.landing_page_layout);
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(new ViewGroup.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
                 RelativeLayout.LayoutParams.MATCH_PARENT));
@@ -153,10 +153,10 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
             landing_parentLayout.addView(landingView, layoutParams);
         else {
             Log.e("LandView == null");
-            AdTaskManager.getInstance().onClose(adTask);
+            AdTaskManager.getInstance().onClose(adInfoTask);
         }
         landing_parentLayout.setVisibility(View.GONE);
-        AdTaskManager.getInstance().onShowCallBack(adTask);
+        AdTaskManager.getInstance().onShowCallBack(adInfoTask);
     }
 
     @Override
@@ -188,10 +188,10 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
         Log.e("error what = "+ what+ " extra = "+ extra);
-        downLoadTask.setDownloadCompleted(false);
-        downLoadTask.setReDownload();
-        DownloadTaskManager.getInstance().notifyUpDate();
-        FileUtil.deleteFile(downLoadTask.getStoreUri());
+        downLoadTaskAD.setDownloadCompleted(false);
+        downLoadTaskAD.setReDownload();
+        ADDownloadTaskManager.getInstance().notifyUpDate();
+        FileUtil.deleteFile(downLoadTaskAD.getStoreUri());
         videoView.stopPlayback(); //播放异常，则停止播放，防止弹窗使界面阻塞
         videoView.setVisibility(View.INVISIBLE);
         video_layout.setVisibility(View.INVISIBLE);
@@ -208,12 +208,12 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
                     public void run() {
                         AdHubProcessor adHubProcessor = new AdHubProcessor();
                         adHubProcessor.startProcessor();
-                        adTask = adHubProcessor.getADTask();
-                        if (adTask==null){
+                        adInfoTask = adHubProcessor.getADTask();
+                        if (adInfoTask ==null){
                             handler.sendEmptyMessage(1002);
                             return;
                         }
-                        AdManager.getInstance().setCurrentShowAdTaskId(adTask.getId());
+                        AdManager.getInstance().setCurrentShowAdTaskId(adInfoTask.getId());
                         handler.sendEmptyMessage(1001);
                     }
                 }).start();
@@ -224,13 +224,13 @@ public class PlayerActivity extends AppCompatActivity implements  MediaPlayer.On
                     public void run() {
                         VlionProcessor processor = new VlionProcessor();
                         processor.startProcessor();
-                        adTask = processor.getADTask();
-                        if (adTask==null){
+                        adInfoTask = processor.getADTask();
+                        if (adInfoTask ==null){
                             handler.sendEmptyMessage(1002);
                             return;
                         }
 
-                        AdManager.getInstance().setCurrentShowAdTaskId(adTask.getId());
+                        AdManager.getInstance().setCurrentShowAdTaskId(adInfoTask.getId());
                         handler.sendEmptyMessage(1001);
 
                     }

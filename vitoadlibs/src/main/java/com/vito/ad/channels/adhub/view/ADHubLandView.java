@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-import com.vito.ad.base.task.ADTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.channels.adhub.response.AdHubResponseEnity;
 import com.vito.ad.channels.adhub.response.AdLogo;
 import com.vito.ad.channels.adhub.response.AdResponse;
@@ -34,7 +34,7 @@ public class ADHubLandView extends ILandView {
     MyWebView webView;
     ImageView imageView;
     @Override
-    public void buildLandView(Context context, final ADTask adTask) {
+    public void buildLandView(Context context, final ADInfoTask adInfoTask) {
         LayoutInflater layoutInflater = LayoutInflater.from(context);
         coverLayout = layoutInflater.inflate(R.layout.native_ad_layout, null, false);
 
@@ -61,10 +61,10 @@ public class ADHubLandView extends ILandView {
 
 
         // 通过传入的adTask 初始化内容
-        AdHubResponseEnity adHubResponseEnity = adTask.getADObject(AdHubResponseEnity.class);
+        AdHubResponseEnity adHubResponseEnity = adInfoTask.getADObject(AdHubResponseEnity.class);
         if (!(adHubResponseEnity!=null&&adHubResponseEnity.getErrcode().equalsIgnoreCase("0"))){
             // 失败 关闭广告
-            onClose(adTask);
+            onClose(adInfoTask);
             return;
         }
         // 继续显示
@@ -72,13 +72,13 @@ public class ADHubLandView extends ILandView {
         webView = coverLayout.findViewById(R.id.native_content_view);
         if (checkEmpty(adHubResponseEnity.getSpaceInfo())){
             // 失败 关闭广告
-            onClose(adTask);
+            onClose(adInfoTask);
             return;
         }
         SpaceInfo spaceInfo = adHubResponseEnity.getSpaceInfo().get(0);
         if (spaceInfo!=null){
             if (checkEmpty(spaceInfo.getAdResponse())){
-                onClose(adTask);
+                onClose(adInfoTask);
                 return;
             }
 
@@ -86,14 +86,14 @@ public class ADHubLandView extends ILandView {
             final AdResponse adResponse = spaceInfo.getAdResponse().get(0);
             if (adResponse!=null){
                 if (checkEmpty(adResponse.getContentInfo())){
-                    onClose(adTask);
+                    onClose(adInfoTask);
                     return;
                 }
                 // 广告素材信息
                 ContentInfo contentInfo = adResponse.getContentInfo().get(0);
                 if (contentInfo!=null) { // 获取到数据
                     if (contentInfo.getRenderType() == 3) { //RENDER_H5	3
-                        AdTaskManager.getInstance().getIAdBaseInterface(adTask).onShow();
+                        AdTaskManager.getInstance().getIAdBaseInterface(adInfoTask).onShow();
                         webView.loadData(contentInfo.getTemplate(),null, null);
                     }
                 }
@@ -136,9 +136,9 @@ public class ADHubLandView extends ILandView {
                                 &&!adResponse.getInteractInfo().getLandingPageUrl().isEmpty()){
                             Intent it = new Intent(Intent.ACTION_VIEW, Uri.parse(adResponse.getInteractInfo().getLandingPageUrl()));
                             AdManager.mContext.startActivity(it);
-                            if (AdTaskManager.getInstance().getIAdBaseInterface(adTask)!=null) {
+                            if (AdTaskManager.getInstance().getIAdBaseInterface(adInfoTask)!=null) {
                                 HashSet<String> urls = new HashSet<>();
-                                for (String url: adTask.getClickCallBackUrls()){
+                                for (String url: adInfoTask.getClickCallBackUrls()){
                                     url = url.replace(".UTC_TS.", System.currentTimeMillis()/1000L+"")
                                     .replace(".AD_CLK_PT_DOWN_X.", ViewManager.getInstance().getStart_point().x+"")
                                     .replace(".AD_CLK_PT_DOWN_Y.", ViewManager.getInstance().getStart_point().y+"")
@@ -150,12 +150,12 @@ public class ADHubLandView extends ILandView {
                                     .replace(".SCRN_CLK_PT_UP_Y.", ViewManager.getInstance().getEnd_point().y+"");
                                     urls.add(url);
                                 }
-                                adTask.setClickCallBackUrls(urls);
+                                adInfoTask.setClickCallBackUrls(urls);
 
-                                AdTaskManager.getInstance().getIAdBaseInterface(adTask).onClick();
+                                AdTaskManager.getInstance().getIAdBaseInterface(adInfoTask).onClick();
 
                             }
-                            onClose(adTask);
+                            onClose(adInfoTask);
                         }
 
                     }
@@ -187,7 +187,7 @@ public class ADHubLandView extends ILandView {
             @Override
             public void onClick(View v) {
                 Log.e("ADTEST", "click close");
-                onClose(adTask);
+                onClose(adInfoTask);
             }
         });
 
@@ -196,8 +196,8 @@ public class ADHubLandView extends ILandView {
     }
 
     @Override
-    public void onClose(ADTask adTask) {
-        super.onClose(adTask);
+    public void onClose(ADInfoTask adInfoTask) {
+        super.onClose(adInfoTask);
 
     }
 

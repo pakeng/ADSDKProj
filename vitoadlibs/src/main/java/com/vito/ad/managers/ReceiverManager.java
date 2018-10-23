@@ -69,7 +69,7 @@ public class ReceiverManager {
 
         intentFilter.addDataScheme("package");
         installBroadcast = new InstallReceiver();
-        DownloadTaskManager.getInstance().getService().registerReceiver(installBroadcast, intentFilter);
+        ADDownloadTaskManager.getInstance().getService().registerReceiver(installBroadcast, intentFilter);
     }
 
     /**
@@ -78,7 +78,7 @@ public class ReceiverManager {
     public void unregisterBroadcast() {
         Log.e("adTest", "unregisterBroadcast");
         if (installBroadcast != null) {
-            DownloadTaskManager.getInstance().getService().unregisterReceiver(installBroadcast);
+            ADDownloadTaskManager.getInstance().getService().unregisterReceiver(installBroadcast);
             installBroadcast = null;
         }
     }

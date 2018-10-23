@@ -14,8 +14,8 @@ import android.os.Build;
 import android.util.DisplayMetrics;
 
 import com.vito.ADFileProvider;
-import com.vito.ad.base.task.DownloadTask;
-import com.vito.ad.managers.DownloadTaskManager;
+import com.vito.ad.base.task.ADDownloadTask;
+import com.vito.ad.managers.ADDownloadTaskManager;
 import com.vito.ad.managers.ReceiverManager;
 
 import java.io.File;
@@ -164,11 +164,11 @@ public class APPUtil {
      * @param apkPath 安装包的路径
      * @param task
      */
-    public static void installApk(Context context, Uri apkPath, DownloadTask task) {
+    public static void installApk(Context context, Uri apkPath, ADDownloadTask task) {
         ApplicationInfo applicationInfo = getAppInfoWithFilePath(context, apkPath.getPath());
         if (applicationInfo!=null) {
             task.setPackageName(applicationInfo.packageName);
-            DownloadTaskManager.getInstance().notifyUpDate();
+            ADDownloadTaskManager.getInstance().notifyUpDate();
         }
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
@@ -183,7 +183,7 @@ public class APPUtil {
      * @param context
      * @param task 安装包的路径
      */
-    public static void installApkWithTask(Context context, DownloadTask task) {
+    public static void installApkWithTask(Context context, ADDownloadTask task) {
         ReceiverManager.getInstance().getCheckInstallList().add(task.getId());
         Log.e("add check list");
         ReceiverManager.getInstance().notifyUpdate();
@@ -397,7 +397,7 @@ public class APPUtil {
         setting.edit().putBoolean("FIRST",false);
     }
 
-    private static void installWithFileProvider(Context context, File file, DownloadTask task) {
+    private static void installWithFileProvider(Context context, File file, ADDownloadTask task) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         Uri apkUri = ADFileProvider.getUriForFile(context, context.getPackageName()+".FileProvider", file);
         Log.e("uri == "+apkUri.toString());
@@ -405,7 +405,7 @@ public class APPUtil {
         if (applicationInfo!=null) {
             task.setPackageName(applicationInfo.packageName);
             Log.e("read packageName from file = "+ applicationInfo.packageName);
-            DownloadTaskManager.getInstance().notifyUpDate();
+            ADDownloadTaskManager.getInstance().notifyUpDate();
         }
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);

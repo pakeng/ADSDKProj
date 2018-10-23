@@ -6,8 +6,8 @@ import com.google.gson.Gson;
 import com.vito.ad.base.entity.VideoDetail;
 import com.vito.ad.base.interfaces.IAdBaseInterface;
 import com.vito.ad.base.processor.IProcessor;
-import com.vito.ad.base.task.ADTask;
-import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.base.task.ADDownloadTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.channels.oneway.view.ImplLandView2;
 import com.vito.ad.managers.AdManager;
 import com.vito.ad.managers.AdTaskManager;
@@ -30,8 +30,8 @@ import java.util.Map;
 
 public class OneWayProcessor extends IProcessor {
     private String oneWayToken = "";
-    private ADTask adTask;
-    private DownloadTask downloadTask;
+    private ADInfoTask adInfoTask;
+    private ADDownloadTask ADDownloadTask;
     private String sessionId;
 
     @Override
@@ -44,38 +44,38 @@ public class OneWayProcessor extends IProcessor {
         if (!oneWayAdContentResponse.isSuccess())
             return;
         OneWayAdContent oneWayAdContent = oneWayAdContentResponse.getData();
-        adTask = new ADTask();
+        adInfoTask = new ADInfoTask();
         String str = gson.toJson(oneWayAdContent);
-        adTask.setADObject(str);
+        adInfoTask.setADObject(str);
         //推广应用素材横竖屏方向，可能值： H, V, HV, VH
         if (oneWayAdContent.getOrientation().startsWith("V")){
-            adTask.setOrientation(1);
+            adInfoTask.setOrientation(1);
         }else {
-            adTask.setOrientation(0);
+            adInfoTask.setOrientation(0);
         }
-        adTask.setId(AdTaskManager.getInstance().getNextADID());
-        adTask.setType(Config.ADTYPE);
+        adInfoTask.setId(AdTaskManager.getInstance().getNextADID());
+        adInfoTask.setType(Config.ADTYPE);
         sessionId = oneWayAdContent.getSessionId();
-        adTask.setDownloadApkUrl(buildLandingPage(oneWayAdContent.getClickUrl()));
+        adInfoTask.setDownloadApkUrl(buildLandingPage(oneWayAdContent.getClickUrl()));
         // TODO  setCallbackURL
         //https://track.oneway.mobi/event?eventName={eventName}&publishId={publishId}&token={token}&ts={timestamp}
         if (oneWayAdContent.getTrackingEvents()!=null){
-            adTask.setVideoStartCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getStart()));
-            adTask.setVideoFirstQuartileCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getFirstQuartile()));
-            adTask.setVideoMidCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getMidpoint()));
-            adTask.setVideoThirdQuartileCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getThirdQuartile()));
-            adTask.setEndCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getEnd()));
-            adTask.setClickCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getClick()));
-            adTask.setCloseCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getClose()));
-            adTask.setShowCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getShow()));
+            adInfoTask.setVideoStartCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getStart()));
+            adInfoTask.setVideoFirstQuartileCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getFirstQuartile()));
+            adInfoTask.setVideoMidCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getMidpoint()));
+            adInfoTask.setVideoThirdQuartileCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getThirdQuartile()));
+            adInfoTask.setEndCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getEnd()));
+            adInfoTask.setClickCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getClick()));
+            adInfoTask.setCloseCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getClose()));
+            adInfoTask.setShowCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getShow()));
 
-            adTask.setSkipCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getSkip()));
-            adTask.setDownloadStartCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getApkDownloadStart()));
-            adTask.setDownloadEndCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getApkDownloadFinish()));
-            adTask.setInstallFinishCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getPackageAdded()));
+            adInfoTask.setSkipCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getSkip()));
+            adInfoTask.setDownloadStartCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getApkDownloadStart()));
+            adInfoTask.setDownloadEndCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getApkDownloadFinish()));
+            adInfoTask.setInstallFinishCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getPackageAdded()));
 
-//            adTask.setmCloseCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getClose()));
-//            adTask.setmCloseCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getClose()));
+//            adInfoTask.setmCloseCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getClose()));
+//            adInfoTask.setmCloseCallBackUrls(new HashSet<>(oneWayAdContent.getTrackingEvents().getClose()));
         }
         //show, start, end, click, apkDownloadStart, apkDownloadFinish, packageAdded
         long ts = System.currentTimeMillis();
@@ -85,70 +85,70 @@ public class OneWayProcessor extends IProcessor {
         setMap.put("eventName","show");
         setMap.put("token",oneWayToken);
         URL url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getShowCallBackUrls().add(url.toString());
+        adInfoTask.getShowCallBackUrls().add(url.toString());
         // start
         setMap.put("eventName","start");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getVideoStartCallBackUrls().add(url.toString());
+        adInfoTask.getVideoStartCallBackUrls().add(url.toString());
         // skip
         setMap.put("eventName","skip");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getSkipCallBackUrls().add(url.toString());
+        adInfoTask.getSkipCallBackUrls().add(url.toString());
         // end
         setMap.put("eventName","end");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getEndCallBackUrls().add(url.toString());
+        adInfoTask.getEndCallBackUrls().add(url.toString());
         // click
         setMap.put("eventName","click");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getClickCallBackUrls().add(url.toString());
+        adInfoTask.getClickCallBackUrls().add(url.toString());
         // apkDownloadStart
         setMap.put("eventName","apkDownloadStart");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getDownloadStartCallBackUrls().add(url.toString());
+        adInfoTask.getDownloadStartCallBackUrls().add(url.toString());
         //apkDownloadFinish
         setMap.put("eventName","apkDownloadFinish");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getDownloadEndCallBackUrls().add(url.toString());
+        adInfoTask.getDownloadEndCallBackUrls().add(url.toString());
         //packageAdded
         setMap.put("eventName","packageAdded");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getInstallCallBackUrls().add(url.toString());
+        adInfoTask.getInstallCallBackUrls().add(url.toString());
 
         setMap.put("eventName","thirdQuartile");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getVideoThirdQuartileCallBackUrls().add(url.toString());
+        adInfoTask.getVideoThirdQuartileCallBackUrls().add(url.toString());
 
         setMap.put("eventName","firstQuartile");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getVideoFirstQuartileCallBackUrls().add(url.toString());
+        adInfoTask.getVideoFirstQuartileCallBackUrls().add(url.toString());
 
         setMap.put("eventName","close");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getCloseCallBackUrls().add(url.toString());
+        adInfoTask.getCloseCallBackUrls().add(url.toString());
 
         setMap.put("eventName","midpoint");
         url = buildGetURL(Config.AD_CALLBACK_URL, setMap);
-        adTask.getVideoMidCallBackUrls().add(url.toString());
+        adInfoTask.getVideoMidCallBackUrls().add(url.toString());
 
-        adTask.setRemoveOnClose(true);
+        adInfoTask.setRemoveOnClose(true);
 
-        downloadTask = new DownloadTask();
-        downloadTask.setId(adTask.getId());
-        downloadTask.setUrl(oneWayAdContent.getVideoUrl());
-        downloadTask.setAd_type(Config.ADTYPE);
+        ADDownloadTask = new ADDownloadTask();
+        ADDownloadTask.setId(adInfoTask.getId());
+        ADDownloadTask.setUrl(oneWayAdContent.getVideoUrl());
+        ADDownloadTask.setAd_type(Config.ADTYPE);
 
-        downloadTask.setPackageName(oneWayAdContent.getAppStoreId());
-        downloadTask.setAppName(oneWayAdContent.getAppName());
-        downloadTask.setmAdname(oneWayAdContent.getAppName());
-        downloadTask.setVideoDetail(new VideoDetail(adTask.getId(), oneWayAdContent.getVideoDuration()));
+        ADDownloadTask.setPackageName(oneWayAdContent.getAppStoreId());
+        ADDownloadTask.setAppName(oneWayAdContent.getAppName());
+        ADDownloadTask.setmAdname(oneWayAdContent.getAppName());
+        ADDownloadTask.setVideoDetail(new VideoDetail(adInfoTask.getId(), oneWayAdContent.getVideoDuration()));
         try {
-            URI uri = new URI(downloadTask.getUrl());
-            String name = MD5Util.encrypt( downloadTask.getPackageName()+ downloadTask.getAppName())+uri.getPath().substring(uri.getPath().lastIndexOf("/")+1);
-            downloadTask.setName(name);
+            URI uri = new URI(ADDownloadTask.getUrl());
+            String name = MD5Util.encrypt( ADDownloadTask.getPackageName()+ ADDownloadTask.getAppName())+uri.getPath().substring(uri.getPath().lastIndexOf("/")+1);
+            ADDownloadTask.setName(name);
         } catch (URISyntaxException e) {
             e.printStackTrace();
-            downloadTask.setName(Base64.encodeToString(oneWayAdContent.getAppName().getBytes(),Base64.URL_SAFE));
+            ADDownloadTask.setName(Base64.encodeToString(oneWayAdContent.getAppName().getBytes(),Base64.URL_SAFE));
         }
 
     }
@@ -379,13 +379,13 @@ public class OneWayProcessor extends IProcessor {
     }
 
     @Override
-    public ADTask getADTask() {
-        return adTask;
+    public ADInfoTask getADTask() {
+        return adInfoTask;
     }
 
     @Override
-    public DownloadTask getDownLoadTask() {
-        return downloadTask;
+    public ADDownloadTask getDownLoadTask() {
+        return ADDownloadTask;
     }
 
 

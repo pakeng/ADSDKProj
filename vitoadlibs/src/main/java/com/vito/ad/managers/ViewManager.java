@@ -5,7 +5,7 @@ import android.graphics.Point;
 import android.view.View;
 
 import com.vito.ad.base.interfaces.IUrlBuildInterface;
-import com.vito.ad.base.task.ADTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.views.ILandView;
 import com.vito.utils.Log;
 
@@ -36,7 +36,7 @@ public class ViewManager {
     }
 
     // 创建 落地页
-    public View buildLandingPageView(Context context, ADTask task){
+    public View buildLandingPageView(Context context, ADInfoTask task){
         if (task == null)
             Log.e("buildLandingPageView with null task");
         if (task==null||this.landViewHashMap.get(task.getType()) == null){
@@ -76,9 +76,9 @@ public class ViewManager {
     }
 
 
-    public String rebuildDownloadUrl(ADTask adTask, String url) {
-        if (iUrlBuildInterfaceMap.get(adTask.getType())!=null)
-            url = iUrlBuildInterfaceMap.get(adTask.getType()).build(url);
+    public String rebuildDownloadUrl(ADInfoTask adInfoTask, String url) {
+        if (iUrlBuildInterfaceMap.get(adInfoTask.getType())!=null)
+            url = iUrlBuildInterfaceMap.get(adInfoTask.getType()).build(url);
         return url;
     }
 

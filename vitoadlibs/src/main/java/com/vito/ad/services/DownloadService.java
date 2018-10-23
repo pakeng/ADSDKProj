@@ -18,12 +18,12 @@ import android.os.Message;
 import com.vito.ad.base.interfaces.IAdBaseInterface;
 import com.vito.ad.base.interfaces.IPullAppEventListener;
 import com.vito.ad.base.jdktool.ConcurrentHashSet;
-import com.vito.ad.base.task.ADTask;
-import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.base.task.ADDownloadTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.configs.Constants;
+import com.vito.ad.managers.ADDownloadTaskManager;
 import com.vito.ad.managers.AdManager;
 import com.vito.ad.managers.AdTaskManager;
-import com.vito.ad.managers.DownloadTaskManager;
 import com.vito.utils.APPUtil;
 import com.vito.utils.Log;
 import com.vito.utils.file.FileUtil;
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 public class DownloadService extends Service {
     private static final String TAG = DownloadService.class.getSimpleName();
-    private ArrayList<DownloadTask> taskList = new ArrayList<>();
+    private ArrayList<ADDownloadTask> taskList = new ArrayList<>();
     public static final int HANDLE_DOWNLOAD = 0x001;
     public static final float UNBIND_SERVICE = 2.0F;
 
@@ -80,7 +80,7 @@ public class DownloadService extends Service {
     /**
      * 下载APK
      */
-    private void downloadApk(DownloadTask task) {
+    private void downloadApk(ADDownloadTask task) {
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(task.getUrl()));
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
@@ -93,7 +93,7 @@ public class DownloadService extends Service {
     /**
      * 下载Video
      */
-    private void downloadVideo(DownloadTask task) {
+    private void downloadVideo(ADDownloadTask task) {
         Log.e("ADTEST", "start download video");
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(task.getUrl()));
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
@@ -163,14 +163,14 @@ public class DownloadService extends Service {
     private void updateProgress() {
         // 通过遍历 apkDownloadMap 获取需要监控的下载
         for (int id : AdManager.getInstance().getApkDownloadMap().values()){
-            DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByADId(id);
-            if (downloadTask!=null&&!downloadTask.isDownloadCompleted()) {
-                int[] bytesAndStatus = getBytesAndStatus(downloadTask.getDownloadId());
+            ADDownloadTask ADDownloadTask = ADDownloadTaskManager.getInstance().getDownloadTaskByADId(id);
+            if (ADDownloadTask !=null&&!ADDownloadTask.isDownloadCompleted()) {
+                int[] bytesAndStatus = getBytesAndStatus(ADDownloadTask.getDownloadId());
                 // 防止除0 错误
                 bytesAndStatus[0] = bytesAndStatus[0]>0?bytesAndStatus[0]:1;
                 bytesAndStatus[1] = bytesAndStatus[1]>0?bytesAndStatus[1]:1000;
                 int p =  (bytesAndStatus[0]/bytesAndStatus[1])* 100;
-                String packageName = downloadTask.getPackageName();
+                String packageName = ADDownloadTask.getPackageName();
                 downLoadHandler.sendMessage(downLoadHandler.obtainMessage(HANDLE_DOWNLOAD, p, 0, packageName));
             }
         }
@@ -207,14 +207,14 @@ public class DownloadService extends Service {
 
 
     public void startTask() {
-        ConcurrentHashSet<DownloadTask> Tasks = DownloadTaskManager.getInstance().getReadOnlyDownloadingTasks();
+        ConcurrentHashSet<ADDownloadTask> Tasks = ADDownloadTaskManager.getInstance().getReadOnlyDownloadingTasks();
         if (downloadManager==null)
             downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
         if (downloadObserver==null)
             downloadObserver = new DownloadChangeObserver();
         // 注册下载监听
         // registerContentObserver();
-        for (DownloadTask task : Tasks) {
+        for (ADDownloadTask task : Tasks) {
             if (task.isDwonloading()||task.isDownloadCompleted()){
                 continue;
             }else{
@@ -261,7 +261,7 @@ public class DownloadService extends Service {
 
                         if (downIdUri != null) {
                             Log.i(TAG, "广播监听下载完成，存储路径为 ：" + downIdUri.getPath());
-                            DownloadTask task = DownloadTaskManager.getInstance().getDownloadTaskByDownloadId(downId);
+                            ADDownloadTask task = ADDownloadTaskManager.getInstance().getDownloadTaskByDownloadId(downId);
                             if (task != null){
                                 onDownloadCompleted(downIdUri, task);
                             }
@@ -278,7 +278,7 @@ public class DownloadService extends Service {
 
     private void startNextTask() {
         if (taskList!=null&&!taskList.isEmpty()){
-            DownloadTask task = taskList.get(0);
+            ADDownloadTask task = taskList.get(0);
 
             Uri uri = Uri.withAppendedPath(
                     Uri.fromFile(
@@ -295,23 +295,23 @@ public class DownloadService extends Service {
             if (task.getType() == Constants.ADVIDEO){
                 downloadVideo(task);
             }else {
-                ADTask adTask = AdTaskManager.getInstance().getAdTaskByADID(task.getOriginId());
-                if (adTask!=null)
-                    AdTaskManager.getInstance().getIAdBaseInterface(adTask).onDownLoadStart();
+                ADInfoTask adInfoTask = AdTaskManager.getInstance().getAdTaskByADID(task.getOriginId());
+                if (adInfoTask !=null)
+                    AdTaskManager.getInstance().getIAdBaseInterface(adInfoTask).onDownLoadStart();
                 downloadApk(task);
             }
             taskList.remove(task);
         }
     }
 
-    private void onDownloadCompleted(Uri downIdUri, DownloadTask task) {
+    private void onDownloadCompleted(Uri downIdUri, ADDownloadTask task) {
         task.setStoreUri(downIdUri);
         task.setDownloadCompleted(true);
         if (task.getType()==Constants.APK_DOWNLOAD){
-            ADTask adTask = AdTaskManager.getInstance().getAdTaskByADID(task.getOriginId());
-            if (adTask==null)
+            ADInfoTask adInfoTask = AdTaskManager.getInstance().getAdTaskByADID(task.getOriginId());
+            if (adInfoTask ==null)
                 return;
-            IAdBaseInterface callback = AdTaskManager.getInstance().getIAdBaseInterface(adTask);
+            IAdBaseInterface callback = AdTaskManager.getInstance().getIAdBaseInterface(adInfoTask);
             callback.onDownloadEnd();
             callback.onInstallStart();
             APPUtil.installApkWithTask(AdManager.mContext, task);

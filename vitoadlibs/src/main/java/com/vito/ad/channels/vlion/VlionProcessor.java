@@ -9,8 +9,8 @@ import com.vito.ad.base.interfaces.IAdBaseInterface;
 import com.vito.ad.base.interfaces.IUrlBuildInterface;
 import com.vito.ad.base.interfaces.ListenerFactory;
 import com.vito.ad.base.processor.IProcessor;
-import com.vito.ad.base.task.ADTask;
-import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.base.task.ADDownloadTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.channels.vlion.request.VlionRequest;
 import com.vito.ad.channels.vlion.response.Conv_tracking;
 import com.vito.ad.channels.vlion.response.VlionResponse;
@@ -33,8 +33,8 @@ import java.util.Iterator;
 
 public class VlionProcessor extends IProcessor {
     private VlionResponse vlionContent = null;
-    private ADTask adTask;
-    private DownloadTask downloadTask;
+    private ADInfoTask adInfoTask;
+    private ADDownloadTask ADDownloadTask;
 
     private static IUrlBuildInterface iUrlBuildInterface  = new IUrlBuildInterface() {
         @Override
@@ -58,23 +58,23 @@ public class VlionProcessor extends IProcessor {
             return;
 
         // 生成ADTask
-        adTask = new ADTask();
+        adInfoTask = new ADInfoTask();
         Gson gson = new Gson();
         String adObjectStr = gson.toJson(vlionContent);
-        adTask.setADObject(adObjectStr);
-        adTask.setId(AdTaskManager.getInstance().getNextADID());
-        adTask.setOrientation(0); // 使用默认值
+        adInfoTask.setADObject(adObjectStr);
+        adInfoTask.setId(AdTaskManager.getInstance().getNextADID());
+        adInfoTask.setOrientation(0); // 使用默认值
 
         if (vlionContent.isIs_gdt()){
-            adTask.setDownloadApkUrl(vlionContent.getLdp());
+            adInfoTask.setDownloadApkUrl(vlionContent.getLdp());
         }
         if (vlionContent.getClk_tracking()!=null)
-            adTask.setClickCallBackUrls(new HashSet<String>(vlionContent.getClk_tracking()));
+            adInfoTask.setClickCallBackUrls(new HashSet<String>(vlionContent.getClk_tracking()));
         if (vlionContent.getImp_tracking()!=null)
-            adTask.setShowCallBackUrls(new HashSet<String>(vlionContent.getImp_tracking()));
+            adInfoTask.setShowCallBackUrls(new HashSet<String>(vlionContent.getImp_tracking()));
         if (vlionContent.getDp_tracking()!=null)
-            adTask.setDownloadStartCallBackUrls(new HashSet<String>(vlionContent.getDp_tracking()));
-        adTask.setType(Config.ADTYPE);
+            adInfoTask.setDownloadStartCallBackUrls(new HashSet<String>(vlionContent.getDp_tracking()));
+        adInfoTask.setType(Config.ADTYPE);
 
         if (vlionContent.getConv_tracking()!=null){
             for (Conv_tracking tracking : vlionContent.getConv_tracking()){
@@ -91,16 +91,16 @@ public class VlionProcessor extends IProcessor {
                      */
                     switch (tracking.getTrack_type()){
                         case 5:
-                            adTask.getDownloadStartCallBackUrls().add(tracking.getUrl());
+                            adInfoTask.getDownloadStartCallBackUrls().add(tracking.getUrl());
                             break;
                         case 6:
-                            adTask.getInstallCallBackUrls().add(tracking.getUrl());
+                            adInfoTask.getInstallCallBackUrls().add(tracking.getUrl());
                             break;
                         case 7:
-                            adTask.getDownloadEndCallBackUrls().add(tracking.getUrl());
+                            adInfoTask.getDownloadEndCallBackUrls().add(tracking.getUrl());
                             break;
                         case 8:
-                            adTask.getStartInstallCallBackUrls().add(tracking.getUrl());
+                            adInfoTask.getStartInstallCallBackUrls().add(tracking.getUrl());
                             break;
                         case 9:
                             // TODO  激活检查 HOW TODO
@@ -113,30 +113,30 @@ public class VlionProcessor extends IProcessor {
 
 
 //        // 生成DownloadTask
-//        downloadTask = new DownloadTask();
-//        downloadTask.setId(adTask.getId());
-//        downloadTask.setType(Constants.ADVIDEO);
-//        downloadTask.setAd_type(Config.ADTYPE);
-//        downloadTask.setUrl(vlionContent.getVideo_download_url());
-//        downloadTask.setPackageName(vlionContent.getApk_pkg_name());
-//        downloadTask.setAppName(vlionContent.getApk_name());
-//        downloadTask.setmAdname(vlionContent.getApk_name());
-//        downloadTask.setPrice(vlionContent.getApi_price()+"");
-//        downloadTask.setSortNum(sortNum);
-//        VideoDetail videoDetail = new VideoDetail(adTask.getId(), 0.0f);
+//        ADDownloadTask = new ADDownloadTask();
+//        ADDownloadTask.setId(adInfoTask.getId());
+//        ADDownloadTask.setType(Constants.ADVIDEO);
+//        ADDownloadTask.setAd_type(Config.ADTYPE);
+//        ADDownloadTask.setUrl(vlionContent.getVideo_download_url());
+//        ADDownloadTask.setPackageName(vlionContent.getApk_pkg_name());
+//        ADDownloadTask.setAppName(vlionContent.getApk_name());
+//        ADDownloadTask.setmAdname(vlionContent.getApk_name());
+//        ADDownloadTask.setPrice(vlionContent.getApi_price()+"");
+//        ADDownloadTask.setSortNum(sortNum);
+//        VideoDetail videoDetail = new VideoDetail(adInfoTask.getId(), 0.0f);
 //        videoDetail.playTime = 0;
-//        downloadTask.setVideoDetail(videoDetail);
+//        ADDownloadTask.setVideoDetail(videoDetail);
 //        try {
-//            URI uri = new URI(downloadTask.getUrl());
+//            URI uri = new URI(ADDownloadTask.getUrl());
 //            String name = uri.getPath().substring(uri.getPath().lastIndexOf("/")+1);
-//            downloadTask.setName(name);
+//            ADDownloadTask.setName(name);
 //        } catch (URISyntaxException e) {
 //            e.printStackTrace();
-//            downloadTask.setName(Base64.encodeToString(vlionContent.getApk_name().getBytes(),Base64.URL_SAFE));
+//            ADDownloadTask.setName(Base64.encodeToString(vlionContent.getApk_name().getBytes(),Base64.URL_SAFE));
 //        }
 
-        AdTaskManager.getInstance().pushTask(adTask);
-//        DownloadTaskManager.getInstance().pushTask(downloadTask);
+        AdTaskManager.getInstance().pushTask(adInfoTask);
+//        ADDownloadTaskManager.getInstance().pushTask(ADDownloadTask);
 
     }
 
@@ -226,13 +226,13 @@ public class VlionProcessor extends IProcessor {
     }
 
     @Override
-    public ADTask getADTask() {
-        return adTask;
+    public ADInfoTask getADTask() {
+        return adInfoTask;
     }
 
     @Override
-    public DownloadTask getDownLoadTask() {
-        return downloadTask;
+    public ADDownloadTask getDownLoadTask() {
+        return ADDownloadTask;
     }
 
     @Override

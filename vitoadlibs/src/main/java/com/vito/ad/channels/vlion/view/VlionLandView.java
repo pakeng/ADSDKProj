@@ -18,14 +18,14 @@ import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.gson.Gson;
-import com.vito.ad.base.task.ADTask;
-import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.base.task.ADDownloadTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.channels.vlion.response.DownloadDetail;
 import com.vito.ad.channels.vlion.response.Gdt_Download_Bean;
 import com.vito.ad.channels.vlion.response.VlionResponse;
+import com.vito.ad.managers.ADDownloadTaskManager;
 import com.vito.ad.managers.AdManager;
 import com.vito.ad.managers.AdTaskManager;
-import com.vito.ad.managers.DownloadTaskManager;
 import com.vito.ad.managers.ViewManager;
 import com.vito.ad.views.ILandView;
 import com.vito.ad.views.webview.MyWebView;
@@ -44,13 +44,13 @@ public class VlionLandView extends ILandView {
     Context mContext;
     private static BlurTransformation blurTransformation = new BlurTransformation( 14, 3);
     @Override
-    public void buildLandView(Context context, final ADTask adTask) {
+    public void buildLandView(Context context, final ADInfoTask adInfoTask) {
         mContext = context;
         LayoutInflater layoutInflater = LayoutInflater.from(context);
         coverLayout = layoutInflater.inflate(R.layout.native_ad_layout_img, null, false);
         // 通过传入的adTask 初始化内容
-        final VlionResponse adResponse = adTask.getADObject(VlionResponse.class);
-        AdTaskManager.getInstance().onShowCallBack(adTask);
+        final VlionResponse adResponse = adInfoTask.getADObject(VlionResponse.class);
+        AdTaskManager.getInstance().onShowCallBack(adInfoTask);
 
         webView = coverLayout.findViewById(R.id.native_content_view);
         imageView = coverLayout.findViewById(R.id.native_image_view);
@@ -111,25 +111,25 @@ public class VlionLandView extends ILandView {
                     if (adResponse.getInteract_type()==1){
                         if (adResponse.isIs_gdt()){
                             // 获取广点通 返回的json然后解析构建下载
-                            ThreadExecutor.getInstance().addTask(buildRunnable(adTask, adResponse));
-                            onClose(adTask);
+                            ThreadExecutor.getInstance().addTask(buildRunnable(adInfoTask, adResponse));
+                            onClose(adInfoTask);
                           return;
                         }
                         //构建下载
-                        String url = ViewManager.getInstance().rebuildDownloadUrl(adTask, adResponse.getLdp());
-                        adTask.setDownloadApkUrl(url);
-                        DownloadTask downloadTask = DownloadTaskManager.getInstance().buildDownloadTaskByADTask(adTask);
-                        DownloadTaskManager.getInstance().pushTask(downloadTask);
-                        onClose(adTask);
+                        String url = ViewManager.getInstance().rebuildDownloadUrl(adInfoTask, adResponse.getLdp());
+                        adInfoTask.setDownloadApkUrl(url);
+                        ADDownloadTask ADDownloadTask = ADDownloadTaskManager.getInstance().buildDownloadTaskByADTask(adInfoTask);
+                        ADDownloadTaskManager.getInstance().pushTask(ADDownloadTask);
+                        onClose(adInfoTask);
                         return;
 
                     }
 
-                    String url = ViewManager.getInstance().rebuildDownloadUrl(adTask, adResponse.getLdp());
+                    String url = ViewManager.getInstance().rebuildDownloadUrl(adInfoTask, adResponse.getLdp());
                     Intent it = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     AdManager.mContext.startActivity(it);
-                    AdTaskManager.getInstance().getIAdBaseInterface(adTask).onClick();
-                    onClose(adTask);
+                    AdTaskManager.getInstance().getIAdBaseInterface(adInfoTask).onClick();
+                    onClose(adInfoTask);
                 }
             });
         }
@@ -141,7 +141,7 @@ public class VlionLandView extends ILandView {
             @Override
             public void onClick(View v) {
                 Log.e("ADTEST", "click close");
-                onClose(adTask);
+                onClose(adInfoTask);
             }
         });
 
@@ -154,17 +154,17 @@ public class VlionLandView extends ILandView {
 
 
     @Override
-    public void onClose(ADTask adTask) {
-        super.onClose(adTask);
+    public void onClose(ADInfoTask adInfoTask) {
+        super.onClose(adInfoTask);
 
     }
 
-    private Runnable buildRunnable(final ADTask adTask, final VlionResponse adResponse){
+    private Runnable buildRunnable(final ADInfoTask adInfoTask, final VlionResponse adResponse){
         return new Runnable() {
             @Override
             public void run() {
                 // 获取下载内容
-                String url = ViewManager.getInstance().rebuildDownloadUrl(adTask, adResponse.getLdp());
+                String url = ViewManager.getInstance().rebuildDownloadUrl(adInfoTask, adResponse.getLdp());
                 String result = NetHelper.doGetHttpResponse(url, 1);
                 Gson gson = new Gson();
                 try {
@@ -172,7 +172,7 @@ public class VlionLandView extends ILandView {
                     if (bean.isSuccess()){
                         DownloadDetail detail = bean.getData();
                         if (detail!=null){
-                            adTask.setDownloadApkUrl(detail.getDstlink());
+                            adInfoTask.setDownloadApkUrl(detail.getDstlink());
                             buildConvTrackingUrls(detail.getClickid());
                         }
                     }
@@ -182,46 +182,46 @@ public class VlionLandView extends ILandView {
                 }
 
 
-                DownloadTask downloadTask = DownloadTaskManager.getInstance().buildDownloadTaskByADTask(adTask);
-                DownloadTaskManager.getInstance().pushTask(downloadTask);
-                onClose(adTask);
+                ADDownloadTask ADDownloadTask = ADDownloadTaskManager.getInstance().buildDownloadTaskByADTask(adInfoTask);
+                ADDownloadTaskManager.getInstance().pushTask(ADDownloadTask);
+                onClose(adInfoTask);
             }
 
             private void buildConvTrackingUrls(String clickid) {
                 HashSet<String> t1 = new HashSet<>();
-                for (String url : adTask.getDownloadStartCallBackUrls()){
+                for (String url : adInfoTask.getDownloadStartCallBackUrls()){
                     url = url.replace("__CLICK_ID__", clickid);
                     t1.add(url);
                 }
-                adTask.setDownloadStartCallBackUrls(t1);
+                adInfoTask.setDownloadStartCallBackUrls(t1);
                 // install end
                 HashSet<String> t2 = new HashSet<>();
-                for (String url : adTask.getInstallCallBackUrls()){
+                for (String url : adInfoTask.getInstallCallBackUrls()){
                     url = url.replace("__CLICK_ID__", clickid);
                     t2.add(url);
                 }
-                adTask.setInstallFinishCallBackUrls(t2);
+                adInfoTask.setInstallFinishCallBackUrls(t2);
                 // download finish
                 HashSet<String> t3 = new HashSet<>();
-                for (String url : adTask.getDownloadEndCallBackUrls()){
+                for (String url : adInfoTask.getDownloadEndCallBackUrls()){
                     url = url.replace("__CLICK_ID__", clickid);
                     t3.add(url);
                 }
-                adTask.setDownloadEndCallBackUrls(t3);
+                adInfoTask.setDownloadEndCallBackUrls(t3);
                 // install start
                 HashSet<String> t4 = new HashSet<>();
-                for (String url : adTask.getStartInstallCallBackUrls()){
+                for (String url : adInfoTask.getStartInstallCallBackUrls()){
                     url = url.replace("__CLICK_ID__", clickid);
                     t4.add(url);
                 }
-                adTask.setStartInstallCallBackUrls(t4);
+                adInfoTask.setStartInstallCallBackUrls(t4);
                 // TODO 激活 HOW TODO
 //                                    HashSet<String> t1 = new HashSet<>();
-//                                    for (String url : adTask.getDownloadStartCallBackUrls()){
+//                                    for (String url : adInfoTask.getDownloadStartCallBackUrls()){
 //                                        url = url.replace("__CLICK_ID__", clickid);
 //                                        t1.add(url);
 //                                    }
-//                                    adTask.setDownloadStartCallBackUrls(t1);
+//                                    adInfoTask.setDownloadStartCallBackUrls(t1);
             }
         };
     }

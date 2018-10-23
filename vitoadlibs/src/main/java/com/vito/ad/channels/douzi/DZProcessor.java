@@ -6,13 +6,13 @@ import com.google.gson.Gson;
 import com.vito.ad.base.entity.VideoDetail;
 import com.vito.ad.base.interfaces.IAdBaseInterface;
 import com.vito.ad.base.processor.IProcessor;
-import com.vito.ad.base.task.ADTask;
-import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.base.task.ADDownloadTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.channels.douzi.view.DZLandView;
 import com.vito.ad.configs.Constants;
 import com.vito.ad.managers.AdManager;
 import com.vito.ad.managers.AdTaskManager;
-import com.vito.ad.managers.DownloadTaskManager;
+import com.vito.ad.managers.ADDownloadTaskManager;
 import com.vito.ad.managers.ViewManager;
 import com.vito.ad.views.video.interfaces.IVideoPlayListener;
 import com.vito.utils.Log;
@@ -28,8 +28,8 @@ import java.net.URISyntaxException;
 
 public class DZProcessor extends IProcessor {
     private DZAdContent dzAdContent = null;
-    private ADTask adTask;
-    private DownloadTask downloadTask;
+    private ADInfoTask adInfoTask;
+    private ADDownloadTask ADDownloadTask;
 
 
     @Override
@@ -37,42 +37,42 @@ public class DZProcessor extends IProcessor {
         if (dzAdContent ==null)
             return;
         // 生成ADTask
-        adTask = new ADTask();
+        adInfoTask = new ADInfoTask();
         Gson gson = new Gson();
         String adObjectStr = gson.toJson(dzAdContent);
-        adTask.setADObject(adObjectStr);
-        adTask.setId(AdTaskManager.getInstance().getNextADID());
-        adTask.setOrientation(dzAdContent.getVideo_type());
-        adTask.setLanding_Page(dzAdContent.getVideo_page()); //
-        adTask.setType(Config.ADTYPE);
+        adInfoTask.setADObject(adObjectStr);
+        adInfoTask.setId(AdTaskManager.getInstance().getNextADID());
+        adInfoTask.setOrientation(dzAdContent.getVideo_type());
+        adInfoTask.setLanding_Page(dzAdContent.getVideo_page()); //
+        adInfoTask.setType(Config.ADTYPE);
 
         //处理回调
 
         // 生成DownloadTask
-        downloadTask = new DownloadTask();
-        downloadTask.setId(adTask.getId());
-        downloadTask.setType(Constants.ADVIDEO);
-        downloadTask.setAd_type(Config.ADTYPE);
-        downloadTask.setUrl(dzAdContent.getVideo_download_url());
-        downloadTask.setPackageName(dzAdContent.getApk_pkg_name());
-        downloadTask.setAppName(dzAdContent.getApk_name());
-        downloadTask.setmAdname(dzAdContent.getApk_name());
-        VideoDetail videoDetail = new VideoDetail(adTask.getId(), 0.0f);
+        ADDownloadTask = new ADDownloadTask();
+        ADDownloadTask.setId(adInfoTask.getId());
+        ADDownloadTask.setType(Constants.ADVIDEO);
+        ADDownloadTask.setAd_type(Config.ADTYPE);
+        ADDownloadTask.setUrl(dzAdContent.getVideo_download_url());
+        ADDownloadTask.setPackageName(dzAdContent.getApk_pkg_name());
+        ADDownloadTask.setAppName(dzAdContent.getApk_name());
+        ADDownloadTask.setmAdname(dzAdContent.getApk_name());
+        VideoDetail videoDetail = new VideoDetail(adInfoTask.getId(), 0.0f);
         videoDetail.playTime = 0;
-        downloadTask.setVideoDetail(videoDetail);
+        ADDownloadTask.setVideoDetail(videoDetail);
         try {
-            URI uri = new URI(downloadTask.getUrl());
-            String name =MD5Util.encrypt( downloadTask.getPackageName()+ downloadTask.getAppName())+
+            URI uri = new URI(ADDownloadTask.getUrl());
+            String name =MD5Util.encrypt( ADDownloadTask.getPackageName()+ ADDownloadTask.getAppName())+
                     uri.getPath().substring(uri.getPath().lastIndexOf("/")+1);
-            downloadTask.setName(name);
+            ADDownloadTask.setName(name);
         } catch (URISyntaxException e) {
             e.printStackTrace();
-            downloadTask.setName(MD5Util.encrypt(Base64.encodeToString(dzAdContent.getApk_name().getBytes(),Base64.URL_SAFE)+downloadTask.getAppName()
-                    +downloadTask.getPackageName()));
+            ADDownloadTask.setName(MD5Util.encrypt(Base64.encodeToString(dzAdContent.getApk_name().getBytes(),Base64.URL_SAFE)+ ADDownloadTask.getAppName()
+                    + ADDownloadTask.getPackageName()));
         }
 
-        AdTaskManager.getInstance().pushTask(adTask);
-        DownloadTaskManager.getInstance().pushTask(downloadTask);
+        AdTaskManager.getInstance().pushTask(adInfoTask);
+        ADDownloadTaskManager.getInstance().pushTask(ADDownloadTask);
 
 
 
@@ -85,7 +85,7 @@ public class DZProcessor extends IProcessor {
 
             @Override
             public void onStart() {
-//                ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+//                ADInfoTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
                 for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoStartCallBackUrls()) {
                     NetHelper.sendGetRequest(url);
                 }
@@ -93,7 +93,7 @@ public class DZProcessor extends IProcessor {
 
             @Override
             public void onEnd() {
-//                ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+//                ADInfoTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
                 for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getEndCallBackUrls()) {
                     NetHelper.sendGetRequest(url);
                 }
@@ -101,7 +101,7 @@ public class DZProcessor extends IProcessor {
 
             @Override
             public void onFirstQuartile() {
-//                ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+//                ADInfoTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
                 for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoFirstQuartileCallBackUrls()) {
                     NetHelper.sendGetRequest(url);
                 }
@@ -109,7 +109,7 @@ public class DZProcessor extends IProcessor {
 
             @Override
             public void onMid() {
-//                ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+//                ADInfoTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
                 for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoMidCallBackUrls()) {
                     NetHelper.sendGetRequest(url);
                 }
@@ -117,7 +117,7 @@ public class DZProcessor extends IProcessor {
 
             @Override
             public void onThirdQuartile() {
-//                ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+//                ADInfoTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
                 for (String url : AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId()).getVideoThirdQuartileCallBackUrls()) {
                     NetHelper.sendGetRequest(url);
                 }
@@ -226,13 +226,13 @@ public class DZProcessor extends IProcessor {
     }
 
     @Override
-    public ADTask getADTask() {
-        return adTask;
+    public ADInfoTask getADTask() {
+        return adInfoTask;
     }
 
     @Override
-    public DownloadTask getDownLoadTask() {
-        return downloadTask;
+    public ADDownloadTask getDownLoadTask() {
+        return ADDownloadTask;
     }
 
     @Override

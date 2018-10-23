@@ -33,7 +33,7 @@
 
         <meta-data
             android:name="SubChannelName"
-            android:value="adtest"/>
+            android:value="gzh_gzh"/>
         <meta-data
             android:name="dbclf"
             android:value="99"/>

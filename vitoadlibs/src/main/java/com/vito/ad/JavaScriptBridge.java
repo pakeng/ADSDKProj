@@ -1,14 +1,15 @@
 package com.vito.ad;
 
 import android.net.Uri;
+
+import com.vito.ad.managers.ADDownloadTaskManager;
 import com.vito.utils.Log;
 
 import com.vito.ad.base.interfaces.IJsCallbackInterface;
-import com.vito.ad.base.task.ADTask;
-import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.base.task.ADInfoTask;
+import com.vito.ad.base.task.ADDownloadTask;
 import com.vito.ad.managers.AdManager;
 import com.vito.ad.managers.AdTaskManager;
-import com.vito.ad.managers.DownloadTaskManager;
 import com.vito.ad.managers.ViewManager;
 
 import org.json.JSONArray;
@@ -115,13 +116,13 @@ public class JavaScriptBridge{
             Log.e("adTest", "download url ="+ url);
                 // 拉起下载服务开始下载并且安装
             // 构建广告APK下载任务
-                ADTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
-                DownloadTask currentDownloadTask = DownloadTaskManager.getInstance().getDownloadTaskByADId(task.getId());
-                if (currentDownloadTask!=null)
-                    currentDownloadTask.setApkDownload(true);
-                DownloadTask downloadTask = DownloadTaskManager.getInstance().buildDownloadTaskByADTask(task);
-                downloadTask.setUrl(ViewManager.getInstance().rebuildDownloadUrl(task, url));
-                DownloadTaskManager.getInstance().pushTask(downloadTask);
+                ADInfoTask task = AdTaskManager.getInstance().getAdTaskByADID(AdManager.getInstance().getCurrentShowAdTaskId());
+                ADDownloadTask currentADDownloadTask = ADDownloadTaskManager.getInstance().getDownloadTaskByADId(task.getId());
+                if (currentADDownloadTask !=null)
+                    currentADDownloadTask.setApkDownload(true);
+                ADDownloadTask ADDownloadTask = ADDownloadTaskManager.getInstance().buildDownloadTaskByADTask(task);
+                ADDownloadTask.setUrl(ViewManager.getInstance().rebuildDownloadUrl(task, url));
+                ADDownloadTaskManager.getInstance().pushTask(ADDownloadTask);
                 AdTaskManager.getInstance().onClose(task);
                 return true;
             }

@@ -6,7 +6,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 
-import com.vito.ad.base.task.ADTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.managers.ViewManager;
 import com.vito.ad.views.ILandView;
 import com.vito.ad.views.webview.MyWebView;
@@ -18,7 +18,7 @@ import vito.com.vitoadlibs.R;
 public class DZLandView extends ILandView {
 
     @Override
-    public void buildLandView(Context context, final ADTask adTask) {
+    public void buildLandView(Context context, final ADInfoTask adInfoTask) {
         LayoutInflater layoutInflater = LayoutInflater.from(context);
         coverLayout = layoutInflater.inflate(R.layout.landing_page_web, null, false);
         MyWebView webView = coverLayout.findViewById(R.id.myWebView);
@@ -46,22 +46,22 @@ public class DZLandView extends ILandView {
             @Override
             public void onClick(View v) {
                 Log.e("ADTEST", "click close");
-                onClose(adTask);
+                onClose(adInfoTask);
             }
         });
-        webView.loadUrl(adTask.getLanding_Page());
-//        String landdata = new String(Base64.decode(adTask.getLanding_Page(), Base64.DEFAULT));
+        webView.loadUrl(adInfoTask.getLanding_Page());
+//        String landdata = new String(Base64.decode(adInfoTask.getLanding_Page(), Base64.DEFAULT));
 //        webView.loadDataWithBaseURL(null, landdata,"text/html", "utf-8", null);
         ViewManager.getInstance().getSize().x = webView.getWidth();
         ViewManager.getInstance().getSize().y = webView.getHeight();
     }
 
     @Override
-    public void onClose(ADTask adTask) {
-        for (String url: adTask.getClickCallBackUrls()) {
+    public void onClose(ADInfoTask adInfoTask) {
+        for (String url: adInfoTask.getClickCallBackUrls()) {
             NetHelper.sendGetRequest(url);
         }
-        super.onClose(adTask);
+        super.onClose(adInfoTask);
 
     }
 }

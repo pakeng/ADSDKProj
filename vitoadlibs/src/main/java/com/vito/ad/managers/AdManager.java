@@ -17,8 +17,8 @@ import com.vito.ad.base.interfaces.IPullAppEventListener;
 import com.vito.ad.base.interfaces.IShowCallBack;
 import com.vito.ad.base.interfaces.PullAppEventListenerFactory;
 import com.vito.ad.base.processor.IProcessor;
-import com.vito.ad.base.task.ADTask;
-import com.vito.ad.base.task.DownloadTask;
+import com.vito.ad.base.task.ADDownloadTask;
+import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.channels.douzi.DZProcessor;
 import com.vito.ad.channels.lanmei.LMProcessor;
 import com.vito.ad.channels.oneway.OneWayProcessor;
@@ -77,7 +77,7 @@ public class AdManager {
             synchronized (AdManager.class){
                 if (instance == null) {
                     instance = new AdManager(ctx);
-                    DownloadTaskManager.getInstance();
+                    ADDownloadTaskManager.getInstance();
                     AdTaskManager.getInstance();
                     CallBackRequestUtil.Init(ctx);
                     // 注册 processor
@@ -99,7 +99,7 @@ public class AdManager {
             synchronized (AdManager.class){
                 if (instance == null) {
                     instance = new AdManager(ctx);
-                    DownloadTaskManager.getInstance();
+                    ADDownloadTaskManager.getInstance();
                     AdTaskManager.getInstance();
                     CallBackRequestUtil.Init(ctx);
                     instance.prepareAdInfo();
@@ -191,10 +191,10 @@ public class AdManager {
         for (IProcessor processor : ProcesserManager.getInstance().getProcessers()){
             if (priority!=null&&priority.contains(processor.getType())){
                 processor.startProcessor();
-                DownloadTask task = processor.getDownLoadTask();
-                ADTask adTask = processor.getADTask();
-                AdTaskManager.getInstance().pushTask(adTask);
-                DownloadTaskManager.getInstance().pushTask(task);
+                ADDownloadTask task = processor.getDownLoadTask();
+                ADInfoTask adInfoTask = processor.getADTask();
+                AdTaskManager.getInstance().pushTask(adInfoTask);
+                ADDownloadTaskManager.getInstance().pushTask(task);
                 count++;
             }
         }
@@ -217,7 +217,7 @@ public class AdManager {
 
     // 使用广告id通知下载完成
     public void notifyPrepare(boolean isSuccess, int id) {
-        DownloadTaskManager.getInstance().notifyUpDate();
+        ADDownloadTaskManager.getInstance().notifyUpDate();
         int count = getAllReadyADCount();
         if (mPrepareCompleteCallback!=null){
             // TODO 优化判断 2 是ADHub的Adtype 3是vlion
@@ -300,7 +300,7 @@ public class AdManager {
     }
 
     public void exit() {
-        DownloadTaskManager.getInstance().exit();
+        ADDownloadTaskManager.getInstance().exit();
 
     }
 
@@ -328,7 +328,7 @@ public class AdManager {
             showCallBack.onClose(currentWhere);
         }
         // 发送 完成广告的回调给游戏服务器
-        DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByADId(currentShowAdTaskId);
+        ADDownloadTask ADDownloadTask = ADDownloadTaskManager.getInstance().getDownloadTaskByADId(currentShowAdTaskId);
         JSONObject params = new JSONObject();
         try {
             params.put("uid", mUid);
@@ -339,14 +339,14 @@ public class AdManager {
 
             params.put("where", currentWhere/1000);
             params.put("level", currentWhere%1000);
-            if (downloadTask!=null){
-                params.put("ad_type", downloadTask.getAD_Type());
-                params.put("app", downloadTask.getAppName()+" ");
-                params.put("ad", downloadTask.getADname()+" ");
-                params.put("ad_id", downloadTask.getSortNum()+"");
-                params.put("package", downloadTask.getPackageName());
-                params.put("price", downloadTask.getPrice());
-                params.put("is_down", downloadTask.isApkDownload()?1:0);
+            if (ADDownloadTask !=null){
+                params.put("ad_type", ADDownloadTask.getAD_Type());
+                params.put("app", ADDownloadTask.getAppName()+" ");
+                params.put("ad", ADDownloadTask.getADname()+" ");
+                params.put("ad_id", ADDownloadTask.getSortNum()+"");
+                params.put("package", ADDownloadTask.getPackageName());
+                params.put("price", ADDownloadTask.getPrice());
+                params.put("is_down", ADDownloadTask.isApkDownload()?1:0);
             }else {
                 params.put("ad_type", 3);
                 params.put("app", "");
@@ -369,13 +369,17 @@ public class AdManager {
         return currentShowAdTaskId;
     }
 
+    public ADInfoTask getCurrentShowAdTask() {
+        return AdTaskManager.getInstance().getAdTaskByADID(currentShowAdTaskId);
+    }
+
     // 检查可用的广告数量
     private int checkReadyAd(){
         mAllReadyADCount = 0;
-        for (ADTask task : AdTaskManager.getInstance().getReadOnlyAdTasks()) {
+        for (ADInfoTask task : AdTaskManager.getInstance().getReadOnlyAdTasks()) {
             if (!task.isRemove()){
-                DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByADId(task.getId());
-                if (downloadTask!=null&&downloadTask.isDownloadCompleted())
+                ADDownloadTask ADDownloadTask = ADDownloadTaskManager.getInstance().getDownloadTaskByADId(task.getId());
+                if (ADDownloadTask !=null&& ADDownloadTask.isDownloadCompleted())
                     mAllReadyADCount++;
             }
         }
@@ -387,11 +391,11 @@ public class AdManager {
             if (target==2||target==3){
                 return 0-target;
             }
-            for (DownloadTask task : DownloadTaskManager.getInstance().getReadOnlyDownloadingTasks()) {
+            for (ADDownloadTask task : ADDownloadTaskManager.getInstance().getReadOnlyDownloadingTasks()) {
                 if (task.getType() == Constants.ADVIDEO && task.isDownloadCompleted()) {
-                    ADTask adTask = AdTaskManager.getInstance().getAdTaskByADID(task.getId());
-                    if (adTask != null) {
-                        if (!adTask.isRemove()&&adTask.getType() == target) {
+                    ADInfoTask adInfoTask = AdTaskManager.getInstance().getAdTaskByADID(task.getId());
+                    if (adInfoTask != null) {
+                        if (!adInfoTask.isRemove()&& adInfoTask.getType() == target) {
                             currentShowAdTaskId = task.getId();
                             return currentShowAdTaskId;
                         }
@@ -404,11 +408,11 @@ public class AdManager {
 
 
     private int getOneAdIdNOTable() {
-        for (DownloadTask task : DownloadTaskManager.getInstance().getReadOnlyDownloadingTasks()) {
+        for (ADDownloadTask task : ADDownloadTaskManager.getInstance().getReadOnlyDownloadingTasks()) {
             if (task.getType() == Constants.ADVIDEO && task.isDownloadCompleted()) {
-                ADTask adTask = AdTaskManager.getInstance().getAdTaskByADID(task.getId());
-                if (adTask != null) {
-                    if (!adTask.isRemove()) {
+                ADInfoTask adInfoTask = AdTaskManager.getInstance().getAdTaskByADID(task.getId());
+                if (adInfoTask != null) {
+                    if (!adInfoTask.isRemove()) {
                         currentShowAdTaskId = task.getId();
                         return currentShowAdTaskId;
                     }
@@ -491,20 +495,20 @@ public class AdManager {
         this.pullEventListeners.put(packageName, listener);
     }
 
-    public void notifyApkInstalled(String packageName, DownloadTask downloadTask) {
+    public void notifyApkInstalled(String packageName, ADDownloadTask ADDownloadTask) {
         if (pullEventListeners !=null&& pullEventListeners.size()>0){
               IPullAppEventListener listener = pullEventListeners.get(packageName);
               if (listener!=null){
-                  listener.onInstallSuccess(downloadTask);
+                  listener.onInstallSuccess(ADDownloadTask);
               }
               else{
-                  PullAppEventListenerFactory.getInstance().onInstallSuccess(downloadTask);
+                  PullAppEventListenerFactory.getInstance().onInstallSuccess(ADDownloadTask);
               }
         }
 
         // 安装成功移除对应的任务记录
-        apkDownloadMap.remove(downloadTask.getUrl());
-//        DownloadTaskManager.getInstance().removeTaskByDownloadId(downloadTask.getDownloadId());
+        apkDownloadMap.remove(ADDownloadTask.getUrl());
+//        ADDownloadTaskManager.getInstance().removeTaskByDownloadId(ADDownloadTask.getDownloadId());
     }
 
     public void notifyApkUninstalled(String packageName, int pullType) {
@@ -529,14 +533,14 @@ public class AdManager {
             return;
         }
         pullEventListeners.put(packageName, listener);
-        DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByURL(url, packageName);
-        downloadTask.setPullType(pullType);
-        downloadTask.setAppName(appName);
+        ADDownloadTask ADDownloadTask = ADDownloadTaskManager.getInstance().getDownloadTaskByURL(url, packageName);
+        ADDownloadTask.setPullType(pullType);
+        ADDownloadTask.setAppName(appName);
         if (listener!=null){
-            listener.onDownloadStart(downloadTask);
+            listener.onDownloadStart(ADDownloadTask);
         }
-        DownloadTaskManager.getInstance().pushTask(downloadTask);
-        apkDownloadMap.put(url, downloadTask.getId());
+        ADDownloadTaskManager.getInstance().pushTask(ADDownloadTask);
+        apkDownloadMap.put(url, ADDownloadTask.getId());
         saveApkDownloadMap();
     }
 
@@ -582,15 +586,15 @@ public class AdManager {
      * 下载失败回调
      */
     public void notifyDownloadApkFailed(long downloadId) {
-        DownloadTask downloadTask = DownloadTaskManager.getInstance().getDownloadTaskByDownloadId(downloadId);
-        if (downloadTask!=null){
-            IPullAppEventListener listener = pullEventListeners.get(downloadTask.getPackageName());
+        ADDownloadTask ADDownloadTask = ADDownloadTaskManager.getInstance().getDownloadTaskByDownloadId(downloadId);
+        if (ADDownloadTask !=null){
+            IPullAppEventListener listener = pullEventListeners.get(ADDownloadTask.getPackageName());
             if (listener!=null){
-                listener.onDownloadFailed(downloadTask);
+                listener.onDownloadFailed(ADDownloadTask);
             }
-            apkDownloadMap.remove(downloadTask.getUrl());
+            apkDownloadMap.remove(ADDownloadTask.getUrl());
             saveApkDownloadMap();
-            DownloadTaskManager.getInstance().removeTaskByDownloadId(downloadTask.getDownloadId());
+            ADDownloadTaskManager.getInstance().removeTaskByDownloadId(ADDownloadTask.getDownloadId());
         }
     }
 
@@ -612,7 +616,7 @@ public class AdManager {
     }
 
     private void downloadSuccessToInstall(int id){
-        DownloadTask task = DownloadTaskManager.getInstance().getDownloadTaskByADId(id);
+        ADDownloadTask task = ADDownloadTaskManager.getInstance().getDownloadTaskByADId(id);
         if (task!=null&&task.isDownloadCompleted()){
             APPUtil.installApkWithTask(mContext, task);
         }

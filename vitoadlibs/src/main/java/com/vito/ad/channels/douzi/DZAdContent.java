@@ -12,6 +12,7 @@ public class DZAdContent {
     private String video_download_url;
     private String video_page;
     private String apk_name;
+    private int ad_type;  // 兼容服务器区分广告内容
     public void setVideo_type(int video_type) {
          this.video_type = video_type;
      }
@@ -62,5 +63,13 @@ public class DZAdContent {
 
     public void setApk_name(String apk_name) {
         this.apk_name = apk_name;
+    }
+
+    public int getAd_type() {
+        return ad_type;
+    }
+
+    public void setAd_type(int ad_type) {
+        this.ad_type = ad_type;
     }
 }

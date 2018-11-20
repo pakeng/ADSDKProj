@@ -24,6 +24,7 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(':ndktool')
     api 'com.github.bumptech.glide:glide:4.7.1'
     api 'com.squareup.okhttp3:okhttp:3.7.0'
     //完整版引入

@@ -1,1 +1,1 @@
-include ':app', ':vitoadlibs'
+include ':app', ':vitoadlibs', ':ndktool', ':gdt_advertisement_sdklibrary'

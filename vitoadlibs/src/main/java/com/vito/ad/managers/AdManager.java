@@ -23,6 +23,7 @@ import com.vito.ad.channels.douzi.DZProcessor;
 import com.vito.ad.channels.lanmei.LMProcessor;
 import com.vito.ad.channels.oneway.OneWayProcessor;
 import com.vito.ad.configs.Constants;
+import com.vito.ad.ndktool.AdNdktool;
 import com.vito.ad.utils.CallBackRequestUtil;
 import com.vito.ad.views.activitys.PlayerActivity;
 import com.vito.user.UserInfo;
@@ -328,7 +329,7 @@ public class AdManager {
             showCallBack.onClose(currentWhere);
         }
         // 发送 完成广告的回调给游戏服务器
-        ADDownloadTask ADDownloadTask = ADDownloadTaskManager.getInstance().getDownloadTaskByADId(currentShowAdTaskId);
+        ADDownloadTask adDownloadTask = ADDownloadTaskManager.getInstance().getDownloadTaskByADId(currentShowAdTaskId);
         JSONObject params = new JSONObject();
         try {
             params.put("uid", mUid);
@@ -339,16 +340,21 @@ public class AdManager {
 
             params.put("where", currentWhere/1000);
             params.put("level", currentWhere%1000);
-            if (ADDownloadTask !=null){
-                params.put("ad_type", ADDownloadTask.getAD_Type());
-                params.put("app", ADDownloadTask.getAppName()+" ");
-                params.put("ad", ADDownloadTask.getADname()+" ");
-                params.put("ad_id", ADDownloadTask.getSortNum()+"");
-                params.put("package", ADDownloadTask.getPackageName());
-                params.put("price", ADDownloadTask.getPrice());
-                params.put("is_down", ADDownloadTask.isApkDownload()?1:0);
+            if (adDownloadTask !=null){
+                if (adDownloadTask.getAdSubType() != ADDownloadTask.ERROR){
+                    params.put("ad_type", adDownloadTask.getAdSubType());
+                }else{
+                    params.put("ad_type", adDownloadTask.getAD_Type());
+                }
+                params.put("app", adDownloadTask.getAppName()+" ");
+                params.put("ad", adDownloadTask.getADname()+" ");
+                params.put("ad_id", adDownloadTask.getSortNum()+"");
+                params.put("package", adDownloadTask.getPackageName());
+                params.put("price", adDownloadTask.getPrice());
+                params.put("is_down", adDownloadTask.isApkDownload()?1:0);
             }else {
-                params.put("ad_type", 3);
+                // TODO BUG  如果有更多的 插屏广告这里有bug
+                params.put("ad_type", 2);
                 params.put("app", "");
                 params.put("ad", " ");
                 params.put("ad_id", "");
@@ -422,56 +428,91 @@ public class AdManager {
         return -1;
     }
 
+    // TODO Test new API
     @NonNull
     private void getPriorityInfo(final Runnable callbackTask){
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                JSONObject jsonObject;
-                try {
-                    jsonObject = new JSONObject(mADDeviceInfo);
-                    jsonObject.put("channel", subChannelStr);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    jsonObject = new JSONObject();
-                    Log.e("ADTEST", subChannelStr+ "make error");
+        if (Log.isByGame)
+            getPriorityInfoByGame();
+        else{
+            Runnable task = new Runnable() {
+                @Override
+                public void run() {
+                    JSONObject jsonObject;
+                    try {
+                        jsonObject = new JSONObject(mADDeviceInfo);
+                        jsonObject.put("channel", subChannelStr);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        jsonObject = new JSONObject();
+                        Log.e("ADTEST", subChannelStr+ "make error");
+                    }
+                    String result = NetHelper.callWithResponse(Constants.getADSURL(), Constants.GET_AD_ORDER, jsonObject);
+                    Gson gson = new Gson();
+                    ADServerResponse response = gson.fromJson(result, ADServerResponse.class);
+                    if (response!=null&&response.getRet()){
+                        priority = response.getData();
+                        ThreadExecutor.getInstance().addTask(callbackTask);
+                    }
+                    Log.e("ADTEST", result);
                 }
-                String result = NetHelper.callWithResponse(Constants.getADSURL(), Constants.GET_AD_ORDER, jsonObject);
-                Gson gson = new Gson();
-                ADServerResponse response = gson.fromJson(result, ADServerResponse.class);
-                if (response!=null&&response.getRet()){
-                    priority = response.getData();
-                    ThreadExecutor.getInstance().addTask(callbackTask);
-                }
-                Log.e("ADTEST", result);
-            }
         };
         ThreadExecutor.getInstance().addTask(task);
+        }
+
     }
 
+
+    @NonNull
+    private void getPriorityInfoByGame(){
+        AdNdktool.getPriorityInfo(subChannelStr, mDeviceID, this.getClass());
+    }
+
+
+    // 将使用反射来完成调用
+    private static void onGetPriorityInfoByGame(String json){
+        Gson gson = new Gson();
+        ADServerResponse response = gson.fromJson(json, ADServerResponse.class);
+        if (response!=null&&response.getRet()) {
+            AdManager.getInstance().priority = response.getData();
+            ThreadExecutor.getInstance().addTask(AdManager.getInstance().getPrepareTask());
+        }
+    }
+
+    @NonNull
+    private void refreshPriorityInfoByGame(){
+        AdNdktool.getPriorityInfo(subChannelStr, mDeviceID);
+    }
+
+
+    // TODO Test new API
     private void refreshPriorityInfo(){
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                JSONObject jsonObject;
-                try {
-                    jsonObject = new JSONObject(mADDeviceInfo);
-                    jsonObject.put("channel", subChannelStr);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    jsonObject = new JSONObject();
-                    Log.e("ADTEST", subChannelStr+ "make error");
+        if (Log.isByGame){
+            refreshPriorityInfoByGame();
+        }else{
+            Runnable task = new Runnable() {
+                @Override
+                public void run() {
+                    JSONObject jsonObject;
+                    try {
+                        jsonObject = new JSONObject(mADDeviceInfo);
+                        jsonObject.put("channel", subChannelStr);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        jsonObject = new JSONObject();
+                        Log.e("ADTEST", subChannelStr+ "make error");
+                    }
+                    String result = NetHelper.callWithResponse(Constants.getADSURL(), Constants.GET_AD_ORDER, jsonObject);
+                    Gson gson = new Gson();
+                    ADServerResponse response = gson.fromJson(result, ADServerResponse.class);
+                    if (response!=null&&response.getRet()){
+                        priority = response.getData();
+                    }
+                    Log.e("ADTEST", result);
                 }
-                String result = NetHelper.callWithResponse(Constants.getADSURL(), Constants.GET_AD_ORDER, jsonObject);
-                Gson gson = new Gson();
-                ADServerResponse response = gson.fromJson(result, ADServerResponse.class);
-                if (response!=null&&response.getRet()){
-                    priority = response.getData();
-                }
-                Log.e("ADTEST", result);
-            }
-        };
-        ThreadExecutor.getInstance().addTask(task);
+            };
+            ThreadExecutor.getInstance().addTask(task);
+        }
+
     }
 
     private void InitAnalysisConfigData(){

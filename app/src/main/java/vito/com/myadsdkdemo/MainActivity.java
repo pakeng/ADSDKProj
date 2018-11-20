@@ -21,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("native-lib");
+        System.loadLibrary("ad_ndktool");
     }
     private AdManager adManager = null;
     private Handler mHandler;
@@ -43,9 +44,6 @@ public class MainActivity extends AppCompatActivity {
                 mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-
-
-
                         adManager.PrepareAD();
 //                        adManager.testDownloadAndInstall();
                     }
@@ -64,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initAD() {
-        com.vito.utils.Log.debugLevel = 2;
+        com.vito.utils.Log.debugLevel = 1;
         com.vito.utils.Log.isDebug = true;
         adManager = AdManager.InitAdManager(MainActivity.this);
         adManager.setPrepareListener(new IPrepareCompleteCallBack() {

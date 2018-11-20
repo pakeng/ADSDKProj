@@ -4,6 +4,7 @@ public class Log {
     private static final String TAG = "ADSDK";
     public static boolean isDebug = false;
     public static int debugLevel = 0;  // 0  正式服 1 外网测试  2 内网
+    public static boolean isByGame = false;
 
     public static void e(String tag, String msg){
         if (isDebug)

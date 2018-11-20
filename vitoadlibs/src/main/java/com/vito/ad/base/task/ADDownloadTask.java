@@ -7,6 +7,7 @@ import com.vito.ad.base.entity.VideoDetail;
 import java.io.Serializable;
 
 public class ADDownloadTask implements Serializable {
+    public static final int ERROR = -1;
     private int type = 0; // 下载类型
     private int id = 0; // id 用来查广告
     private int originId = 0; // 原始id  当派生出apk 下载task的时候应当设置该id
@@ -25,6 +26,7 @@ public class ADDownloadTask implements Serializable {
     private String appName;
     private int sortNum;
     private int pullType = -1; // 拉起类型
+    private int adSubType = -1; // 兼容服务器渠道内部区分广告
 
     public boolean isApkDownload() {
         return isApkDownload;
@@ -199,5 +201,13 @@ public class ADDownloadTask implements Serializable {
 
     public void setPullType(int pullType) {
         this.pullType = pullType;
+    }
+
+    public int getAdSubType() {
+        return adSubType;
+    }
+
+    public void setAdSubType(int adSubType) {
+        this.adSubType = adSubType;
     }
 }

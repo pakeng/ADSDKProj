@@ -2,3 +2,4 @@ app/build/
 captures/
 .idea/
 *.iml
+ndktool/.externalNativeBuild/

@@ -127,6 +127,7 @@ public class ADDownloadTaskManager {
         // 检查文件是否存在
         File f = checkFile(adDownloadTask.getName());
         if (f.exists()){
+            adDownloadTask.setDownloadCompleted(true);
             adDownloadTask.setStoreUri(Uri.fromFile(f));
             onFileDownloadSuccess(adDownloadTask);
             return true;

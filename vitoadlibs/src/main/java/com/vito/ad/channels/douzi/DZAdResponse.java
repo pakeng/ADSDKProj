@@ -30,5 +30,4 @@ public class DZAdResponse {
      public List<DZAdContent> getAd() {
          return ad;
      }
-
 }

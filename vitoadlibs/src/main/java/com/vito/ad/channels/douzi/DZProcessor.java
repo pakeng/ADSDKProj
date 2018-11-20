@@ -10,9 +10,9 @@ import com.vito.ad.base.task.ADDownloadTask;
 import com.vito.ad.base.task.ADInfoTask;
 import com.vito.ad.channels.douzi.view.DZLandView;
 import com.vito.ad.configs.Constants;
+import com.vito.ad.managers.ADDownloadTaskManager;
 import com.vito.ad.managers.AdManager;
 import com.vito.ad.managers.AdTaskManager;
-import com.vito.ad.managers.ADDownloadTaskManager;
 import com.vito.ad.managers.ViewManager;
 import com.vito.ad.views.video.interfaces.IVideoPlayListener;
 import com.vito.utils.Log;
@@ -25,6 +25,7 @@ import org.json.JSONObject;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 public class DZProcessor extends IProcessor {
     private DZAdContent dzAdContent = null;
@@ -36,47 +37,10 @@ public class DZProcessor extends IProcessor {
     public void getAdContent() {
         if (dzAdContent ==null)
             return;
-        // 生成ADTask
-        adInfoTask = new ADInfoTask();
-        Gson gson = new Gson();
-        String adObjectStr = gson.toJson(dzAdContent);
-        adInfoTask.setADObject(adObjectStr);
-        adInfoTask.setId(AdTaskManager.getInstance().getNextADID());
-        adInfoTask.setOrientation(dzAdContent.getVideo_type());
-        adInfoTask.setLanding_Page(dzAdContent.getVideo_page()); //
-        adInfoTask.setType(Config.ADTYPE);
-
-        //处理回调
-
-        // 生成DownloadTask
-        ADDownloadTask = new ADDownloadTask();
-        ADDownloadTask.setId(adInfoTask.getId());
-        ADDownloadTask.setType(Constants.ADVIDEO);
-        ADDownloadTask.setAd_type(Config.ADTYPE);
-        ADDownloadTask.setUrl(dzAdContent.getVideo_download_url());
-        ADDownloadTask.setPackageName(dzAdContent.getApk_pkg_name());
-        ADDownloadTask.setAppName(dzAdContent.getApk_name());
-        ADDownloadTask.setmAdname(dzAdContent.getApk_name());
-        VideoDetail videoDetail = new VideoDetail(adInfoTask.getId(), 0.0f);
-        videoDetail.playTime = 0;
-        ADDownloadTask.setVideoDetail(videoDetail);
-        try {
-            URI uri = new URI(ADDownloadTask.getUrl());
-            String name =MD5Util.encrypt( ADDownloadTask.getPackageName()+ ADDownloadTask.getAppName())+
-                    uri.getPath().substring(uri.getPath().lastIndexOf("/")+1);
-            ADDownloadTask.setName(name);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-            ADDownloadTask.setName(MD5Util.encrypt(Base64.encodeToString(dzAdContent.getApk_name().getBytes(),Base64.URL_SAFE)+ ADDownloadTask.getAppName()
-                    + ADDownloadTask.getPackageName()));
-        }
-
-        AdTaskManager.getInstance().pushTask(adInfoTask);
-        ADDownloadTaskManager.getInstance().pushTask(ADDownloadTask);
-
-
-
+        makeTasks(dzAdContent);
     }
+
+
 
     public DZProcessor(){
         android.util.Log.e("ADSDK", "DZProcessor  注册");
@@ -215,8 +179,11 @@ public class DZProcessor extends IProcessor {
                     Log.e("ADTEST", "get DZ ad failed with result = "+result);
                     return result;
                 }
-                if (response.getAd().size()>0)
-                    dzAdContent = response.getAd().get(0);  // 只获取一个广告
+                // TODO
+                if (response.getAd().size()>0) {
+//                    dzAdContent = response.getAd().get(0);  // 只获取一个广告
+                    processAll(response.getAd());
+                }
                 else {
                     return result;
                 }
@@ -248,5 +215,54 @@ public class DZProcessor extends IProcessor {
     @Override
     public int getType() {
         return Config.ADTYPE;
+    }
+
+    private void makeTasks(DZAdContent content) {
+        // 生成ADTask
+        adInfoTask = new ADInfoTask();
+        Gson gson = new Gson();
+        String adObjectStr = gson.toJson(content);
+        adInfoTask.setADObject(adObjectStr);
+        adInfoTask.setId(AdTaskManager.getInstance().getNextADID());
+        adInfoTask.setOrientation(content.getVideo_type());
+        adInfoTask.setLanding_Page(content.getVideo_page()); //
+        adInfoTask.setType(Config.ADTYPE);
+
+
+        //处理回调
+
+        // 生成DownloadTask
+        ADDownloadTask = new ADDownloadTask();
+        ADDownloadTask.setId(adInfoTask.getId());
+        ADDownloadTask.setType(Constants.ADVIDEO);
+        ADDownloadTask.setAd_type(Config.ADTYPE);
+        ADDownloadTask.setUrl(content.getVideo_download_url());
+        ADDownloadTask.setPackageName(content.getApk_pkg_name());
+        ADDownloadTask.setAppName(content.getApk_name());
+        ADDownloadTask.setmAdname(content.getApk_name());
+
+        ADDownloadTask.setAdSubType(content.getAd_type()); // 兼容服务器广告内容区分
+        VideoDetail videoDetail = new VideoDetail(adInfoTask.getId(), 0.0f);
+        videoDetail.playTime = 0;
+        ADDownloadTask.setVideoDetail(videoDetail);
+        try {
+            URI uri = new URI(ADDownloadTask.getUrl());
+            String name =MD5Util.encrypt( ADDownloadTask.getPackageName()+ ADDownloadTask.getAppName())+
+                    uri.getPath().substring(uri.getPath().lastIndexOf("/")+1);
+            ADDownloadTask.setName(name);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            ADDownloadTask.setName(MD5Util.encrypt(Base64.encodeToString(content.getApk_name().getBytes(),Base64.URL_SAFE)+ ADDownloadTask.getAppName()
+                    + ADDownloadTask.getPackageName()));
+        }
+
+        AdTaskManager.getInstance().pushTask(adInfoTask);
+        ADDownloadTaskManager.getInstance().pushTask(ADDownloadTask);
+    }
+
+    private void processAll(List<DZAdContent> ad) {
+        for (DZAdContent content: ad){
+            makeTasks(content);
+        }
     }
 }
